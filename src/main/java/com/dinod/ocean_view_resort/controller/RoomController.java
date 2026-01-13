@@ -7,6 +7,7 @@ import com.dinod.ocean_view_resort.service.Impl.RoomServiceImpl;
 import com.dinod.ocean_view_resort.service.RoomService;
 import com.dinod.ocean_view_resort.utills.ConnectionProvider;
 import com.dinod.ocean_view_resort.utills.DBConnection;
+import com.google.gson.Gson;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -14,12 +15,15 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet(name = "RoomController", urlPatterns = { "/rooms" })
 public class RoomController extends HttpServlet {
 
     private RoomService roomService;
+    private Gson gson = new Gson();
 
     @Override
     public void init() throws ServletException {
@@ -31,22 +35,37 @@ public class RoomController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String action = request.getParameter("action");
 
-        if ("edit".equals(action)) {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        String action = request.getParameter("action");
+        if ("getById".equals(action)) {
             try {
                 int roomNo = Integer.parseInt(request.getParameter("id"));
                 Room room = roomService.getRoomById(roomNo);
-                request.setAttribute("roomToEdit", room);
-            } catch (NumberFormatException e) {
-                // Ignore invalid ID
-            }
+                if (room != null) {
+                    response.getWriter().write(gson.toJson(room));
+                } else {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    Map<String, String> error = new HashMap<>();
+                    error.put("status", "error");
+                    error.put("message", "Room not found");
+                    response.getWriter().write(gson.toJson(error));
 
+                }
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                Map<String, String> error = new HashMap<>();
+                error.put("status", "error");
+                error.put("message", "Invalid ID");
+                response.getWriter().write(gson.toJson(error));
+            }
+        } else {
+            List<Room> roomList = roomService.getAllRooms();
+            response.getWriter().write(gson.toJson(roomList));
         }
 
-        List<Room> roomList = roomService.getAllRooms();
-        request.setAttribute("roomList", roomList);
-        request.getRequestDispatcher("admin-dashboard/rooms.jsp").forward(request, response);
     }
 
     @Override
@@ -55,6 +74,9 @@ public class RoomController extends HttpServlet {
         if (action != null) {
             action = action.trim();
         }
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
 
         if ("update".equals(action)) {
             doPut(request, response);
@@ -67,92 +89,89 @@ public class RoomController extends HttpServlet {
 
     @Override
     public void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String error = null;
-        String success = null;
+        Map<String, String> jsonResponse = new HashMap<>();
         try {
-            // For update, we NEED the ID
             int roomNo = Integer.parseInt(request.getParameter("roomNo"));
             Room room = parseRoomFromRequest(request);
             room.setRoomNo(roomNo);
 
             if (roomService.updateRoom(room)) {
-                success = "Room updated successfully!";
+                jsonResponse.put("status", "success");
+                jsonResponse.put("message", "Room updated successfully!");
             } else {
-                error = "Failed to update room.";
+                jsonResponse.put("status", "error");
+                jsonResponse.put("message", "Failed to update room.");
             }
         } catch (IllegalArgumentException e) {
-            error = e.getMessage();
+            jsonResponse.put("status", "error");
+            jsonResponse.put("message", e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            error = "An unexpected error occurred.";
+            jsonResponse.put("status", "error");
+            jsonResponse.put("message", "An unexpected error occurred.");
         }
-        handleResponse(request, response, success, error);
+        response.getWriter().write(gson.toJson(jsonResponse));
     }
 
     @Override
     public void doDelete(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String error = null;
-        String success = null;
+        Map<String, String> jsonResponse = new HashMap<>();
         try {
             int roomNo = Integer.parseInt(request.getParameter("roomNo"));
             if (roomService.deleteRoom(roomNo)) {
-                success = "Room deleted successfully!";
+                jsonResponse.put("status", "success");
+                jsonResponse.put("message", "Room deleted successfully!");
             } else {
-                error = "Failed to delete room.";
+                jsonResponse.put("status", "error");
+                jsonResponse.put("message", "Failed to delete room.");
             }
         } catch (IllegalArgumentException e) {
-            error = e.getMessage();
+            jsonResponse.put("status", "error");
+            jsonResponse.put("message", e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            error = "An unexpected error occurred.";
+            jsonResponse.put("status", "error");
+            jsonResponse.put("message", "An unexpected error occurred.");
         }
-        handleResponse(request, response, success, error);
+        response.getWriter().write(gson.toJson(jsonResponse));
     }
 
     private void handleAdd(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String error = null;
-        String success = null;
+        Map<String, String> jsonResponse = new HashMap<>();
         try {
-            // For ADD, we ignore ID (it's auto-increment)
             Room room = parseRoomFromRequest(request);
-            // roomNo will be 0 by default from helper if we modify helper, or we just
-            // ignore it here
-            // actually helper parses it, we should modify helper or just pass 0 here.
-
             if (roomService.addRoom(room)) {
-                success = "Room added successfully!";
+                jsonResponse.put("status", "success");
+                jsonResponse.put("message", "Room added successfully!");
             } else {
-                error = "Failed to add room.";
+                jsonResponse.put("status", "error");
+                jsonResponse.put("message", "Failed to add room.");
             }
         } catch (IllegalArgumentException e) {
-            error = e.getMessage();
+            jsonResponse.put("status", "error");
+            jsonResponse.put("message", e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            error = "An unexpected error occurred.";
+            jsonResponse.put("status", "error");
+            jsonResponse.put("message", "An unexpected error occurred.");
         }
-        handleResponse(request, response, success, error);
+        response.getWriter().write(gson.toJson(jsonResponse));
     }
 
-    private void handleResponse(HttpServletRequest request, HttpServletResponse response, String success, String error)
-            throws ServletException, IOException {
-        if (error != null) {
-            request.setAttribute("errorMessage", error);
-            List<Room> roomList = roomService.getAllRooms();
-            request.setAttribute("roomList", roomList);
-            request.getRequestDispatcher("admin-dashboard/rooms.jsp").forward(request, response);
-        } else {
-            request.getSession().setAttribute("successMessage", success);
-            response.sendRedirect("rooms");
-        }
-    }
+    // handleResponse method removed as it is no longer used
 
     private Room parseRoomFromRequest(HttpServletRequest request) {
 
         String roomType = request.getParameter("roomType");
         double price = Double.parseDouble(request.getParameter("pricePerNight"));
-        boolean isAvailable = request.getParameter("isAvailable") != null;
+        boolean isAvailable = request.getParameter("isAvailable") != null; // checkbox sends "on" or null usually, or we
+                                                                           // can check simple check
+
+        // In JSP checkbox value="true", so if checked sends "true".
+        // If not checked, nothing is sent.
+        // So checking != null is usually enough if value is present.
 
         return new Room(0, roomType, price, isAvailable);
     }

@@ -37,6 +37,5 @@ build/
 
 ### Mac OS ###
 .DS_Store
-
-bill.jsp
-help.jsp
+git_simulation_plan.md
+sql table file.sql

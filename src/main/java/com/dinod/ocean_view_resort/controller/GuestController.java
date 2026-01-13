@@ -15,11 +15,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import com.google.gson.Gson;
+import java.util.HashMap;
+import java.util.Map;
 
 @WebServlet(name = "GuestController", urlPatterns = { "/guests" })
 public class GuestController extends HttpServlet {
 
     private GuestService guestService;
+    private Gson gson = new Gson();
 
     @Override
     public void init() throws ServletException {
@@ -31,17 +35,10 @@ public class GuestController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String action = request.getParameter("action");
 
-        if ("edit".equals(action)) {
-            try {
-                int guestId = Integer.parseInt(request.getParameter("id"));
-                Guest guest = guestService.getGuestById(guestId);
-                request.setAttribute("guestToEdit", guest);
-            } catch (NumberFormatException e) {
-                // Ignore invalid ID
-            }
-        }
+        // Serve JSON for Web Service Requirement
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
 
         String searchContact = request.getParameter("searchContact");
         List<Guest> guestList;
@@ -53,13 +50,12 @@ public class GuestController extends HttpServlet {
             } else {
                 guestList = java.util.Collections.emptyList();
             }
-            request.setAttribute("searchContact", searchContact); // Persist search term
         } else {
             guestList = guestService.getAllGuests();
         }
 
-        request.setAttribute("guestList", guestList);
-        request.getRequestDispatcher("staff-dashboard/guest.jsp").forward(request, response);
+        // Return List as JSON
+        response.getWriter().write(gson.toJson(guestList));
     }
 
     @Override
@@ -68,6 +64,9 @@ public class GuestController extends HttpServlet {
         if (action != null) {
             action = action.trim();
         }
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
 
         if ("update".equals(action)) {
             doPut(request, response);
@@ -80,80 +79,79 @@ public class GuestController extends HttpServlet {
 
     @Override
     public void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String error = null;
-        String success = null;
+        Map<String, String> jsonResponse = new HashMap<>();
         try {
             int guestId = Integer.parseInt(request.getParameter("guestId"));
             Guest guest = parseGuestFromRequest(request);
             guest.setGuestID(guestId);
 
             if (guestService.updateGuest(guest)) {
-                success = "Guest updated successfully!";
+                jsonResponse.put("status", "success");
+                jsonResponse.put("message", "Guest updated successfully!");
             } else {
-                error = "Failed to update guest.";
+                jsonResponse.put("status", "error");
+                jsonResponse.put("message", "Failed to update guest.");
             }
         } catch (IllegalArgumentException e) {
-            error = e.getMessage();
+            jsonResponse.put("status", "error");
+            jsonResponse.put("message", e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            error = "An unexpected error occurred.";
+            jsonResponse.put("status", "error");
+            jsonResponse.put("message", "An unexpected error occurred.");
         }
-        handleResponse(request, response, success, error);
+        response.getWriter().write(gson.toJson(jsonResponse));
     }
 
     @Override
     public void doDelete(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String error = null;
-        String success = null;
+        Map<String, String> jsonResponse = new HashMap<>();
         try {
             int guestId = Integer.parseInt(request.getParameter("guestId"));
             if (guestService.deleteGuest(guestId)) {
-                success = "Guest deleted successfully!";
+                jsonResponse.put("status", "success");
+                jsonResponse.put("message", "Guest deleted successfully!");
             } else {
-                error = "Failed to delete guest.";
+                jsonResponse.put("status", "error");
+                jsonResponse.put("message", "Failed to delete guest.");
             }
         } catch (IllegalArgumentException e) {
-            error = e.getMessage();
+            jsonResponse.put("status", "error");
+            jsonResponse.put("message", e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            error = "An unexpected error occurred.";
+            jsonResponse.put("status", "error");
+            jsonResponse.put("message", "An unexpected error occurred.");
         }
-        handleResponse(request, response, success, error);
+        response.getWriter().write(gson.toJson(jsonResponse));
     }
 
     private void handleAdd(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String error = null;
-        String success = null;
+        Map<String, String> jsonResponse = new HashMap<>();
         try {
             Guest guest = parseGuestFromRequest(request);
             if (guestService.addGuest(guest)) {
-                success = "Guest added successfully!";
+                jsonResponse.put("status", "success");
+                jsonResponse.put("message", "Guest added successfully!");
             } else {
-                error = "Failed to add guest.";
+                jsonResponse.put("status", "error");
+                jsonResponse.put("message", "Failed to add guest.");
             }
         } catch (IllegalArgumentException e) {
-            error = e.getMessage();
+            jsonResponse.put("status", "error");
+            jsonResponse.put("message", e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            error = "An unexpected error occurred.";
+            jsonResponse.put("status", "error");
+            jsonResponse.put("message", "An unexpected error occurred.");
         }
-        handleResponse(request, response, success, error);
+        response.getWriter().write(gson.toJson(jsonResponse));
     }
 
-    private void handleResponse(HttpServletRequest request, HttpServletResponse response, String success, String error)
-            throws ServletException, IOException {
-        if (error != null) {
-            request.setAttribute("errorMessage", error);
-            List<Guest> guestList = guestService.getAllGuests();
-            request.setAttribute("guestList", guestList);
-            request.getRequestDispatcher("staff-dashboard/guest.jsp").forward(request, response);
-        } else {
-            request.getSession().setAttribute("successMessage", success);
-            response.sendRedirect("guests");
-        }
-    }
+    // handleResponse method removed as it is no longer used (replaced by JSON
+    // responses)
 
     private Guest parseGuestFromRequest(HttpServletRequest request) {
         String name = request.getParameter("name");

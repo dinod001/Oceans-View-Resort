@@ -8,7 +8,6 @@ import com.dinod.ocean_view_resort.dao.ReservationDao;
 import com.dinod.ocean_view_resort.dao.RoomDao;
 import com.dinod.ocean_view_resort.model.Guest;
 import com.dinod.ocean_view_resort.model.Reservation;
-import com.dinod.ocean_view_resort.model.Room;
 import com.dinod.ocean_view_resort.service.GuestService;
 import com.dinod.ocean_view_resort.service.Impl.GuestServiceImpl;
 import com.dinod.ocean_view_resort.service.Impl.ReservationServiceImpl;
@@ -29,12 +28,19 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
+
 @WebServlet(name = "ReservationController", urlPatterns = { "/reservations" })
 public class ReservationController extends HttpServlet {
 
     private ReservationService reservationService;
     private RoomService roomService;
     private GuestService guestService;
+    private final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd").create();
 
     @Override
     public void init() throws ServletException {
@@ -54,46 +60,44 @@ public class ReservationController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
+
         String action = request.getParameter("action");
         String searchContact = request.getParameter("searchContact");
 
-        // 1. Handle Edit Mode
-        if ("edit".equals(action)) {
-            try {
+        try {
+            if ("edit".equals(action)) {
+                // Return specific reservation for editing
                 int resNo = Integer.parseInt(request.getParameter("id"));
                 Reservation res = reservationService.getReservationById(resNo);
-                request.setAttribute("reservationToEdit", res);
 
-                // Fetch the guest details for this reservation to pre-fill the form
+                // Also fetch the guest details for this reservation
                 Guest guest = guestService.getGuestById(res.getGuestID());
-                request.setAttribute("guestToEdit", guest);
 
-            } catch (NumberFormatException e) {
-                // Ignore
+                // Combine into a transient object or map for the response
+                Map<String, Object> data = new HashMap<>();
+                data.put("reservation", res);
+                data.put("guest", guest);
+
+                out.print(gson.toJson(data));
+
+            } else {
+                // List Mode
+                List<Reservation> reservationList;
+                if (searchContact != null && !searchContact.trim().isEmpty()) {
+                    reservationList = reservationService.getReservationsByContactNo(searchContact.trim());
+                } else {
+                    reservationList = reservationService.getAllReservations();
+                }
+                out.print(gson.toJson(reservationList));
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            out.print(gson.toJson(createResponse("error", e.getMessage())));
         }
-
-        // 2. Load Reservations (Search or All)
-        List<Reservation> reservationList;
-        if (searchContact != null && !searchContact.trim().isEmpty()) {
-            reservationList = reservationService.getReservationsByContactNo(searchContact.trim());
-            request.setAttribute("searchContact", searchContact);
-        } else {
-            reservationList = reservationService.getAllReservations();
-        }
-        request.setAttribute("reservationList", reservationList);
-
-        // 3. Load Available Rooms (for the Add Form dropdown)
-        // In a real app we might filter by dates, but for now we show all available
-        // rooms
-        // plus the currently booked room if in edit mode (so it doesn't vanish)
-        List<Room> allRooms = roomService.getAllRooms();
-        // Filter mainly for available rooms, but this logic might be better in UI or
-        // Service
-        // For simplicity, we pass all rooms and let UI indicate availability
-        request.setAttribute("roomList", allRooms);
-
-        request.getRequestDispatcher("staff-dashboard/reservations.jsp").forward(request, response);
     }
 
     @Override
@@ -114,8 +118,9 @@ public class ReservationController extends HttpServlet {
 
     @Override
     public void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String error = null;
-        String success = null;
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
 
         try {
             // Parse Reservation
@@ -123,8 +128,8 @@ public class ReservationController extends HttpServlet {
             Reservation res = parseReservationFromRequest(request);
             res.setReservationNo(resNo);
 
-            // Fetch Staff ID from Session (Required for FK constraint)
-            HttpSession session = request.getSession();
+            // Fetch Staff ID from Session
+            HttpSession session = request.getSession(false);
             if (session != null && session.getAttribute("id") != null) {
                 int staffId = (Integer) session.getAttribute("id");
                 res.setStaffID(staffId);
@@ -132,58 +137,59 @@ public class ReservationController extends HttpServlet {
                 throw new IllegalStateException("User not logged in or session expired.");
             }
 
-            // Explicitly set the OLD guest ID just in case, logic inside service handles
-            // switching
-            int currentGuestId = Integer.parseInt(request.getParameter("guestId"));
-            res.setGuestID(currentGuestId);
+            // Explicitly set the OLD guest ID
+            String guestIdParam = request.getParameter("guestId");
+            if (guestIdParam != null && !guestIdParam.isEmpty()) {
+                res.setGuestID(Integer.parseInt(guestIdParam));
+            }
 
-            // Parse Guest Details (for potential update)
+            // Parse Guest Details
             Guest guest = parseGuestFromRequest(request);
 
             if (reservationService.updateReservation(res, guest)) {
-                success = "Reservation updated successfully!";
+                out.print(gson.toJson(createResponse("success", "Reservation updated successfully!")));
             } else {
-                error = "Failed to update reservation.";
+                out.print(gson.toJson(createResponse("error", "Failed to update reservation.")));
             }
 
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            error = e.getMessage();
         } catch (Exception e) {
             e.printStackTrace();
-            error = "An unexpected error occurred.";
+            out.print(gson.toJson(createResponse("error", "Error: " + e.getMessage())));
         }
-        handleResponse(request, response, success, error);
     }
 
     @Override
     public void doDelete(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String error = null;
-        String success = null;
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
+
         try {
             int resNo = Integer.parseInt(request.getParameter("reservationNo"));
             if (reservationService.deleteReservation(resNo)) {
-                success = "Reservation cancelled successfully!";
+                out.print(gson.toJson(createResponse("success", "Reservation cancelled successfully!")));
             } else {
-                error = "Failed to cancel reservation.";
+                out.print(gson.toJson(createResponse("error", "Failed to cancel reservation.")));
             }
         } catch (Exception e) {
             e.printStackTrace();
-            error = "An error occurred during cancellation.";
+            out.print(gson.toJson(createResponse("error", "Error: " + e.getMessage())));
         }
-        handleResponse(request, response, success, error);
     }
 
     private void handleAdd(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String error = null;
-        String success = null;
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
+
         try {
             Reservation res = parseReservationFromRequest(request);
             Guest guest = parseGuestFromRequest(request);
 
             // Get Staff ID from Session
-            HttpSession session = request.getSession();
+            HttpSession session = request.getSession(false);
             if (session != null && session.getAttribute("id") != null) {
                 int staffId = (Integer) session.getAttribute("id");
                 res.setStaffID(staffId);
@@ -192,31 +198,21 @@ public class ReservationController extends HttpServlet {
             }
 
             if (reservationService.createReservation(res, guest)) {
-                success = "Reservation created successfully!";
+                out.print(gson.toJson(createResponse("success", "Reservation created successfully!")));
             } else {
-                error = "Failed to create reservation.";
+                out.print(gson.toJson(createResponse("error", "Failed to create reservation.")));
             }
-        } catch (IllegalArgumentException e) {
-            error = e.getMessage();
         } catch (Exception e) {
             e.printStackTrace();
-            error = "An unexpected error occurred: " + e.getMessage();
+            out.print(gson.toJson(createResponse("error", "Error: " + e.getMessage())));
         }
-        handleResponse(request, response, success, error);
     }
 
-    private void handleResponse(HttpServletRequest request, HttpServletResponse response, String success, String error)
-            throws ServletException, IOException {
-        if (error != null) {
-            request.setAttribute("errorMessage", error);
-            // Re-fetch lists for the view
-            request.setAttribute("reservationList", reservationService.getAllReservations());
-            request.setAttribute("roomList", roomService.getAllRooms());
-            request.getRequestDispatcher("staff-dashboard/reservations.jsp").forward(request, response);
-        } else {
-            request.getSession().setAttribute("successMessage", success);
-            response.sendRedirect("reservations");
-        }
+    private Map<String, Object> createResponse(String status, String message) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", status);
+        map.put("message", message);
+        return map;
     }
 
     private Reservation parseReservationFromRequest(HttpServletRequest request) throws ParseException {
@@ -228,8 +224,13 @@ public class ReservationController extends HttpServlet {
         }
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        res.setCheckInDate(sdf.parse(request.getParameter("checkInDate")));
-        res.setCheckOutDate(sdf.parse(request.getParameter("checkOutDate")));
+        String checkIn = request.getParameter("checkInDate");
+        String checkOut = request.getParameter("checkOutDate");
+
+        if (checkIn != null && !checkIn.isEmpty())
+            res.setCheckInDate(sdf.parse(checkIn));
+        if (checkOut != null && !checkOut.isEmpty())
+            res.setCheckOutDate(sdf.parse(checkOut));
 
         return res;
     }
