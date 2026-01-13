@@ -37,3 +37,9 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+bill.jsp
+guest.jsp
+help.jsp
+reservations.jsp
+rooms.jsp
