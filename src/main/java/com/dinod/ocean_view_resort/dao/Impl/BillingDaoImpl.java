@@ -44,7 +44,8 @@ public class BillingDaoImpl implements BillingDao {
     public Billing getBillByReservationId(int reservationNo) {
         try {
             Connection con = connectionProvider.createConnection();
-            String query = "SELECT * FROM billings WHERE res_no = ?";
+            // Only fetch bills with status = 'PAID', ordered by most recent
+            String query = "SELECT * FROM billings WHERE res_no = ? AND status = 'PAID' ORDER BY bill_id DESC LIMIT 1";
             PreparedStatement ps = con.prepareStatement(query);
             ps.setInt(1, reservationNo);
             ResultSet rs = ps.executeQuery();
@@ -55,11 +56,38 @@ public class BillingDaoImpl implements BillingDao {
                 bill.setResNo(rs.getInt("res_no"));
                 bill.setTotalAmount(rs.getDouble("total_amount"));
                 bill.setTax(rs.getDouble("tax"));
+                try {
+                    String status = rs.getString("status");
+                    if (status != null) {
+                        bill.setStatus(status);
+                    } else {
+                        bill.setStatus("PAID");
+                    }
+                } catch (SQLException e) {
+                    bill.setStatus("PAID"); // Default if column missing
+                }
                 return bill;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public boolean updateBillStatus(int reservationNo, String status) {
+        String query = "UPDATE billings SET status = ? WHERE res_no = ?";
+        try (Connection con = connectionProvider.createConnection();
+                PreparedStatement ps = con.prepareStatement(query)) {
+
+            ps.setString(1, status);
+            ps.setInt(2, reservationNo);
+
+            int result = ps.executeUpdate();
+            return result > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

@@ -26,7 +26,7 @@ public class ReservationDaoImpl implements ReservationDao {
 
     @Override
     public boolean addReservation(Reservation reservation) {
-        String query = "INSERT INTO reservations (guest_id, room_no, staff_id, room_type, price_per_night, check_in_date, check_out_date) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO reservations (guest_id, room_no, staff_id, room_type, price_per_night, check_in_date, check_out_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection con = connectionProvider.createConnection();
                 PreparedStatement ps = con.prepareStatement(query)) {
 
@@ -37,6 +37,12 @@ public class ReservationDaoImpl implements ReservationDao {
             ps.setDouble(5, reservation.getPricePerNight());
             ps.setDate(6, new java.sql.Date(reservation.getCheckInDate().getTime()));
             ps.setDate(7, new java.sql.Date(reservation.getCheckOutDate().getTime()));
+            // Default status is 'PENDING' if not specified, but good to be explicit if
+            // model has it
+            String status = reservation.getStatus();
+            if (status == null)
+                status = "PENDING";
+            ps.setString(8, status);
 
             int result = ps.executeUpdate();
             return result > 0;
@@ -50,7 +56,7 @@ public class ReservationDaoImpl implements ReservationDao {
     public boolean updateReservation(Reservation reservation) {
         // room_type and price_per_night might change if room changes, but usually we
         // just update dates/room
-        String query = "UPDATE reservations SET guest_id = ?, room_no = ?, staff_id = ?, room_type = ?, price_per_night = ?, check_in_date = ?, check_out_date = ? WHERE reservation_no = ?";
+        String query = "UPDATE reservations SET guest_id = ?, room_no = ?, staff_id = ?, room_type = ?, price_per_night = ?, check_in_date = ?, check_out_date = ?, status = ? WHERE reservation_no = ?";
         try (Connection con = connectionProvider.createConnection();
                 PreparedStatement ps = con.prepareStatement(query)) {
 
@@ -61,7 +67,8 @@ public class ReservationDaoImpl implements ReservationDao {
             ps.setDouble(5, reservation.getPricePerNight());
             ps.setDate(6, new java.sql.Date(reservation.getCheckInDate().getTime()));
             ps.setDate(7, new java.sql.Date(reservation.getCheckOutDate().getTime()));
-            ps.setInt(8, reservation.getReservationNo());
+            ps.setString(8, reservation.getStatus());
+            ps.setInt(9, reservation.getReservationNo());
 
             int result = ps.executeUpdate();
             return result > 0;
@@ -147,6 +154,23 @@ public class ReservationDaoImpl implements ReservationDao {
         return list;
     }
 
+    @Override
+    public boolean updateReservationStatus(int reservationNo, String status) {
+        String query = "UPDATE reservations SET status = ? WHERE reservation_no = ?";
+        try (Connection con = connectionProvider.createConnection();
+                PreparedStatement ps = con.prepareStatement(query)) {
+
+            ps.setString(1, status);
+            ps.setInt(2, reservationNo);
+
+            int result = ps.executeUpdate();
+            return result > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private Reservation mapResultSetToReservation(ResultSet rs) throws SQLException {
         Reservation r = new Reservation();
         r.setReservationNo(rs.getInt("reservation_no"));
@@ -157,6 +181,18 @@ public class ReservationDaoImpl implements ReservationDao {
         r.setPricePerNight(rs.getDouble("price_per_night"));
         r.setCheckInDate(rs.getDate("check_in_date"));
         r.setCheckOutDate(rs.getDate("check_out_date"));
+
+        // Handle status mapping with fallback
+        try {
+            String status = rs.getString("status");
+            if (status != null) {
+                r.setStatus(status);
+            } else {
+                r.setStatus("PENDING");
+            }
+        } catch (SQLException e) {
+            r.setStatus("PENDING"); // Default if column missing
+        }
 
         // Populate transient fields safely (check if column exists in RS to avoid
         // errors if RS doesn't have it)

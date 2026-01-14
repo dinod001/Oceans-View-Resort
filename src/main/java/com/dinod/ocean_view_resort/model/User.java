@@ -3,8 +3,11 @@ package com.dinod.ocean_view_resort.model;
 public class User {
     private int id;
     private String userName;
+    private String email;
     private String password;
     private String role;
+    private String contactNo;
+    private String address;
 
     public User(int id, String userName, String password, String role) {
         this.id = id;
@@ -38,6 +41,14 @@ public class User {
         this.userName = userName;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public String getPassword() {
         return password;
     }
@@ -52,5 +63,21 @@ public class User {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getContactNo() {
+        return contactNo;
+    }
+
+    public void setContactNo(String contactNo) {
+        this.contactNo = contactNo;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

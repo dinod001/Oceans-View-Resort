@@ -2,6 +2,8 @@ package com.dinod.ocean_view_resort.service.Impl;
 
 import com.dinod.ocean_view_resort.dao.Impl.ReservationDaoImpl;
 import com.dinod.ocean_view_resort.dao.ReservationDao;
+import com.dinod.ocean_view_resort.dao.BillingDao;
+import com.dinod.ocean_view_resort.dao.Impl.BillingDaoImpl;
 import com.dinod.ocean_view_resort.model.Guest;
 import com.dinod.ocean_view_resort.model.Reservation;
 import com.dinod.ocean_view_resort.model.Room;
@@ -15,12 +17,14 @@ import java.util.List;
 public class ReservationServiceImpl implements ReservationService {
 
     private ReservationDao reservationDao;
+    private BillingDao billingDao;
     private GuestService guestService;
     private RoomService roomService;
     private EmailService emailService;
 
     public ReservationServiceImpl() {
         this.reservationDao = new ReservationDaoImpl();
+        this.billingDao = new BillingDaoImpl();
         this.guestService = new GuestServiceImpl();
         this.roomService = new RoomServiceImpl();
         this.emailService = new EmailServiceImpl();
@@ -28,6 +32,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     public ReservationServiceImpl(ReservationDao reservationDao, GuestService guestService, RoomService roomService) {
         this.reservationDao = reservationDao;
+        this.billingDao = new BillingDaoImpl(); // Default to impl if not provided
         this.guestService = guestService;
         this.roomService = roomService;
         this.emailService = new EmailServiceImpl();
@@ -129,34 +134,23 @@ public class ReservationServiceImpl implements ReservationService {
             throw new IllegalArgumentException("Check-out date must be after Check-in date.");
         }
 
-        // 1. Handle Guest Update Logic
-        // We have the *current* guest ID in reservation.getGuestID() (from the
-        // form/hidden field ideally)
-        // But we must check if the contact number provided points to a DIFFERENT guest.
+        // Get current reservation to check for changes
+        Reservation currentReservation = getReservationById(reservation.getReservationNo());
+        if (currentReservation == null) {
+            throw new IllegalArgumentException("Reservation not found.");
+        }
 
+        // 1. Handle Guest Update Logic
         String newContact = guestDetails.getContactNo();
         Guest uniqueCheck = guestService.getGuestByContactNo(newContact);
 
         if (uniqueCheck != null && uniqueCheck.getGuestID() != reservation.getGuestID()) {
-            // The contact number belongs to SOMEONE ELSE.
-            // Requirement implied: switch reservation to that user ("we have access...
-            // according to that we can update")
-            // Logic: Switch this reservation to point to the *existing* user who owns this
-            // contact info.
             reservation.setGuestID(uniqueCheck.getGuestID());
         } else {
-            // The contact number is either new (null) OR belongs to the current guest (IDs
-            // match).
-            // In this case, we update the CURRENT guest's details (Name, Address, maybe
-            // Contact typo fix).
-            // guestDetails passed here might lack the ID if it came purely from a form, so
-            // ensure ID is set.
             guestDetails.setGuestID(reservation.getGuestID());
             boolean guestUpdated = guestService.updateGuest(guestDetails);
             if (!guestUpdated) {
-                // Log warning but proceed? Or fail? Let's fail safety.
-                // throw new RuntimeException("Failed to update guest details.");
-                // Actually, updateGuest returns false if ID invalid.
+                // Log warning but proceed
             }
         }
 
@@ -167,7 +161,34 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setPricePerNight(room.getPricePerNight());
         }
 
-        return reservationDao.updateReservation(reservation);
+        // 3. Update the reservation
+        boolean updated = reservationDao.updateReservation(reservation);
+
+        // 4. If reservation was PAID and dates/room changed, regenerate bill
+        if (updated && "PAID".equalsIgnoreCase(currentReservation.getStatus())) {
+            boolean datesChanged = !currentReservation.getCheckInDate().equals(reservation.getCheckInDate())
+                    || !currentReservation.getCheckOutDate().equals(reservation.getCheckOutDate());
+            boolean roomChanged = currentReservation.getRoomNo() != reservation.getRoomNo();
+
+            if (datesChanged || roomChanged) {
+                try {
+                    // Cancel old bill
+                    billingDao.updateBillStatus(reservation.getReservationNo(), "CANCELLED");
+
+                    // Generate new bill (this will also set status back to PAID)
+                    BillingServiceImpl billingService = new BillingServiceImpl();
+                    billingService.generateBill(reservation.getReservationNo());
+
+                    System.out.println("Bill regenerated for Reservation #" + reservation.getReservationNo()
+                            + " due to " + (datesChanged ? "date" : "room") + " change.");
+                } catch (Exception e) {
+                    System.err.println("Failed to regenerate bill: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return updated;
     }
 
     public boolean deleteReservation(int reservationNo) {
@@ -190,5 +211,29 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public List<Reservation> getReservationsByContactNo(String contactNo) {
         return reservationDao.getReservationsByContactNo(contactNo);
+    }
+
+    @Override
+    public boolean updateReservationStatus(int reservationNo, String newStatus) {
+        Reservation reservation = getReservationById(reservationNo);
+        if (reservation == null)
+            return false;
+
+        String currentStatus = reservation.getStatus();
+
+        // 1. Business Logic: Cancel bill if transitioning from PAID to PENDING or
+        // CANCELLED
+        if ("PAID".equalsIgnoreCase(currentStatus)) {
+            if ("PENDING".equalsIgnoreCase(newStatus) || "CANCELLED".equalsIgnoreCase(newStatus)) {
+                billingDao.updateBillStatus(reservationNo, "CANCELLED");
+                System.out.println("Bill cancelled for Reservation #" + reservationNo
+                        + " (Status: PAID -> " + newStatus + ")");
+            }
+        }
+
+        // 2. Business Logic: Update Room Availability based on Status
+        // Logic removed: Now handled by DB Trigger 'after_reservation_update'
+
+        return reservationDao.updateReservationStatus(reservationNo, newStatus);
     }
 }

@@ -5,18 +5,21 @@ public class Billing {
     private int resNo;
     private double totalAmount;
     private double tax;
+    private String status; // PAID, CANCELLED
 
     public Billing(int billID, int resNo, double totalAmount, double tax) {
         this.billID = billID;
         this.resNo = resNo;
         this.totalAmount = totalAmount;
         this.tax = tax;
+        this.status = "PAID"; // Default status
     }
 
     public Billing(int resNo, double totalAmount, double tax) {
         this.resNo = resNo;
         this.totalAmount = totalAmount;
         this.tax = tax;
+        this.status = "PAID"; // Default status
     }
 
     public Billing() {
@@ -52,5 +55,13 @@ public class Billing {
 
     public void setTax(double tax) {
         this.tax = tax;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

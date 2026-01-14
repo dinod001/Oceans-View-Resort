@@ -7,4 +7,6 @@ public interface BillingDao {
     void generateBill(int reservationNo);
 
     Billing getBillByReservationId(int reservationNo);
+
+    boolean updateBillStatus(int reservationNo, String status);
 }

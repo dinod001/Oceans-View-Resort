@@ -16,4 +16,6 @@ public interface ReservationDao {
     List<Reservation> getAllReservations();
 
     List<Reservation> getReservationsByContactNo(String contactNo);
+
+    boolean updateReservationStatus(int reservationNo, String status);
 }

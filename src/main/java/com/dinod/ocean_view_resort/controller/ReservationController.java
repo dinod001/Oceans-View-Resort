@@ -111,8 +111,31 @@ public class ReservationController extends HttpServlet {
             doPut(request, response);
         } else if ("delete".equals(action)) {
             doDelete(request, response);
+        } else if ("updateStatus".equals(action)) {
+            handleUpdateStatus(request, response);
         } else {
             handleAdd(request, response);
+        }
+    }
+
+    private void handleUpdateStatus(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
+
+        try {
+            int resNo = Integer.parseInt(request.getParameter("reservationNo"));
+            String status = request.getParameter("status");
+
+            if (reservationService.updateReservationStatus(resNo, status)) {
+                out.print(gson.toJson(createResponse("success", "Status updated to " + status)));
+            } else {
+                out.print(gson.toJson(createResponse("error", "Failed to update status.")));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            out.print(gson.toJson(createResponse("error", "Error: " + e.getMessage())));
         }
     }
 
