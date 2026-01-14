@@ -26,13 +26,14 @@ public class GuestDaoImpl implements GuestDao {
 
     @Override
     public boolean addGuest(Guest guest) {
-        String query = "INSERT INTO guests (name, address, contact_no) VALUES (?, ?, ?)";
+        String query = "INSERT INTO guests (name, address, contact_no, email) VALUES (?, ?, ?, ?)";
         try (Connection con = connectionProvider.createConnection();
                 PreparedStatement ps = con.prepareStatement(query)) {
 
             ps.setString(1, guest.getName());
             ps.setString(2, guest.getAddress());
             ps.setString(3, guest.getContactNo());
+            ps.setString(4, guest.getEmail());
 
             int result = ps.executeUpdate();
             return result > 0;
@@ -44,14 +45,15 @@ public class GuestDaoImpl implements GuestDao {
 
     @Override
     public boolean updateGuest(Guest guest) {
-        String query = "UPDATE guests SET name = ?, address = ?, contact_no = ? WHERE guest_id = ?";
+        String query = "UPDATE guests SET name = ?, address = ?, contact_no = ?, email = ? WHERE guest_id = ?";
         try (Connection con = connectionProvider.createConnection();
                 PreparedStatement ps = con.prepareStatement(query)) {
 
             ps.setString(1, guest.getName());
             ps.setString(2, guest.getAddress());
             ps.setString(3, guest.getContactNo());
-            ps.setInt(4, guest.getGuestID());
+            ps.setString(4, guest.getEmail());
+            ps.setInt(5, guest.getGuestID());
 
             int result = ps.executeUpdate();
             return result > 0;
@@ -92,6 +94,7 @@ public class GuestDaoImpl implements GuestDao {
                 guest.setName(rs.getString("name"));
                 guest.setAddress(rs.getString("address"));
                 guest.setContactNo(rs.getString("contact_no"));
+                guest.setEmail(rs.getString("email"));
                 return guest;
             }
         } catch (SQLException e) {
@@ -114,6 +117,7 @@ public class GuestDaoImpl implements GuestDao {
                 guest.setName(rs.getString("name"));
                 guest.setAddress(rs.getString("address"));
                 guest.setContactNo(rs.getString("contact_no"));
+                guest.setEmail(rs.getString("email"));
                 guests.add(guest);
             }
         } catch (SQLException e) {
@@ -137,6 +141,7 @@ public class GuestDaoImpl implements GuestDao {
                 guest.setName(rs.getString("name"));
                 guest.setAddress(rs.getString("address"));
                 guest.setContactNo(rs.getString("contact_no"));
+                guest.setEmail(rs.getString("email"));
                 return guest;
             }
         } catch (SQLException e) {

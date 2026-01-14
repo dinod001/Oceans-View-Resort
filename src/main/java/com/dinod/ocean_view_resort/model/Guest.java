@@ -5,14 +5,24 @@ public class Guest {
     private String name;
     private String address;
     private String contactNo;
+    private String email;
 
-    public Guest(int guestID, String name, String address, String contactNo) {
+    public Guest(int guestID, String name, String address, String contactNo, String email) {
         this.guestID = guestID;
         this.name = name;
         this.address = address;
         this.contactNo = contactNo;
+        this.email = email;
     }
 
+    public Guest(String name, String address, String contactNo, String email) {
+        this.name = name;
+        this.address = address;
+        this.contactNo = contactNo;
+        this.email = email;
+    }
+
+    // Legacy constructor for backward compatibility
     public Guest(String name, String address, String contactNo) {
         this.name = name;
         this.address = address;
@@ -52,5 +62,13 @@ public class Guest {
 
     public void setContactNo(String contactNo) {
         this.contactNo = contactNo;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

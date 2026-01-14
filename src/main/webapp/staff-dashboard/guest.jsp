@@ -261,13 +261,14 @@
                     <th>ID</th>
                     <th>Name</th>
                     <th>Contact No</th>
+                    <th>Email</th>
                     <th>Address</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody id="guestTableBody">
                   <tr>
-                    <td colspan="5" style="text-align:center;">Loading guests...</td>
+                    <td colspan="6" style="text-align:center;">Loading guests...</td>
                   </tr>
                 </tbody>
               </table>
@@ -289,6 +290,11 @@
                 <div class="form-group">
                   <label>Contact Number</label>
                   <input type="text" name="contactNo" required>
+                </div>
+
+                <div class="form-group">
+                  <label>Email Address</label>
+                  <input type="email" name="email" placeholder="guest@example.com">
                 </div>
 
                 <div class="form-group">
@@ -318,7 +324,7 @@
 
                   if (data.length === 0) {
                     tbody.innerHTML =
-                      '<tr><td colspan="5" style="text-align:center;">No guests found</td></tr>';
+                      '<tr><td colspan="6" style="text-align:center;">No guests found</td></tr>';
                     return;
                   }
 
@@ -328,12 +334,14 @@
                       '<td>#' + g.guestID + '</td>' +
                       '<td>' + g.name + '</td>' +
                       '<td>' + g.contactNo + '</td>' +
+                      '<td>' + (g.email || 'N/A') + '</td>' +
                       '<td>' + g.address + '</td>' +
                       '<td>' +
                       '<button class="action-btn btn-edit" onclick="editGuest(' +
                       g.guestID + ', \'' +
                       g.name + '\', \'' +
                       g.contactNo + '\', \'' +
+                      (g.email || '') + '\', \'' +
                       g.address.replace(/'/g, "\\'") +
                       '\')">Edit</button> ' +
                       '<button class="action-btn btn-delete" onclick="deleteGuest(' +
@@ -347,7 +355,7 @@
                 });
             }
 
-            function editGuest(id, name, contact, address) {
+            function editGuest(id, name, contact, email, address) {
               var form = document.getElementById('guestForm');
               document.getElementById('formTitle').innerText = 'Edit Guest';
 
@@ -355,6 +363,7 @@
               form.guestId.value = id;
               form.name.value = name;
               form.contactNo.value = contact;
+              form.email.value = email || '';
               form.address.value = address;
 
               document.getElementById('submitBtn').innerText = 'Save Changes';

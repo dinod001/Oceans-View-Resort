@@ -5,6 +5,7 @@ import com.dinod.ocean_view_resort.dao.ReservationDao;
 import com.dinod.ocean_view_resort.model.Guest;
 import com.dinod.ocean_view_resort.model.Reservation;
 import com.dinod.ocean_view_resort.model.Room;
+import com.dinod.ocean_view_resort.service.EmailService;
 import com.dinod.ocean_view_resort.service.GuestService;
 import com.dinod.ocean_view_resort.service.ReservationService;
 import com.dinod.ocean_view_resort.service.RoomService;
@@ -16,17 +17,20 @@ public class ReservationServiceImpl implements ReservationService {
     private ReservationDao reservationDao;
     private GuestService guestService;
     private RoomService roomService;
+    private EmailService emailService;
 
     public ReservationServiceImpl() {
         this.reservationDao = new ReservationDaoImpl();
         this.guestService = new GuestServiceImpl();
         this.roomService = new RoomServiceImpl();
+        this.emailService = new EmailServiceImpl();
     }
 
     public ReservationServiceImpl(ReservationDao reservationDao, GuestService guestService, RoomService roomService) {
         this.reservationDao = reservationDao;
         this.guestService = guestService;
         this.roomService = roomService;
+        this.emailService = new EmailServiceImpl();
     }
 
     @Override
@@ -46,6 +50,12 @@ public class ReservationServiceImpl implements ReservationService {
         String contact = guestDetails.getContactNo();
         if (contact == null || contact.trim().isEmpty()) {
             throw new IllegalArgumentException("Guest contact number is required.");
+        }
+
+        // Validate 10-digit phone number
+        String cleanedContact = contact.replaceAll("[^0-9]", ""); // Remove non-digits
+        if (cleanedContact.length() != 10) {
+            throw new IllegalArgumentException("Contact number must be exactly 10 digits.");
         }
 
         Guest existingGuest = guestService.getGuestByContactNo(contact);
@@ -83,7 +93,27 @@ public class ReservationServiceImpl implements ReservationService {
         // 4. Save Reservation
         // Note: DB Trigger 'after_reservation_insert' will set room.is_available =
         // FALSE
-        return reservationDao.addReservation(reservation);
+        boolean reservationCreated = reservationDao.addReservation(reservation);
+
+        // 5. Send Email Confirmation (if reservation successful and guest has email)
+        if (reservationCreated) {
+            try {
+                // Fetch the complete guest details with email
+                Guest completeGuest = guestService.getGuestById(reservation.getGuestID());
+                if (completeGuest != null && completeGuest.getEmail() != null && !completeGuest.getEmail().isEmpty()) {
+                    emailService.sendReservationConfirmation(reservation, completeGuest);
+                    System.out.println("Reservation confirmation email sent to: " + completeGuest.getEmail());
+                } else {
+                    System.out.println("Email not sent: Guest email not available");
+                }
+            } catch (Exception e) {
+                // Log error but don't fail the reservation if email fails
+                System.err.println("Failed to send confirmation email: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        return reservationCreated;
     }
 
     @Override

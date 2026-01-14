@@ -157,7 +157,8 @@ public class GuestController extends HttpServlet {
         String name = request.getParameter("name");
         String address = request.getParameter("address");
         String contactNo = request.getParameter("contactNo");
+        String email = request.getParameter("email");
 
-        return new Guest(name, address, contactNo);
+        return new Guest(name, address, contactNo, email);
     }
 }

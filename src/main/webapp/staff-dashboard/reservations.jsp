@@ -308,6 +308,10 @@
                             <input type="text" id="guestName" name="guestName" required>
                         </div>
                         <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" id="guestEmail" name="guestEmail" placeholder="guest@example.com">
+                        </div>
+                        <div class="form-group">
                             <label>Address</label>
                             <input type="text" id="guestAddress" name="guestAddress">
                         </div>
@@ -472,6 +476,7 @@
 
                             document.getElementById('guestContact').value = g.contactNo;
                             document.getElementById('guestName').value = g.name;
+                            document.getElementById('guestEmail').value = g.email || '';
                             document.getElementById('guestAddress').value = g.address || '';
 
                             // Room Select

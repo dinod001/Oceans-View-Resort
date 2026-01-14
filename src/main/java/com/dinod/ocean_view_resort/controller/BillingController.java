@@ -86,6 +86,7 @@ public class BillingController extends HttpServlet {
             int resNo = Integer.parseInt(request.getParameter("reservationNo"));
 
             // Generate the bill (calls Stored Procedure internally)
+            // Email sending is now handled inside BillingServiceImpl.generateBill()
             Billing bill = billingService.generateBill(resNo);
 
             if (bill != null) {

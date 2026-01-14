@@ -239,6 +239,7 @@ public class ReservationController extends HttpServlet {
         String name = request.getParameter("guestName");
         String contact = request.getParameter("guestContact");
         String address = request.getParameter("guestAddress");
-        return new Guest(name, address, contact);
+        String email = request.getParameter("guestEmail");
+        return new Guest(name, address, contact, email);
     }
 }
