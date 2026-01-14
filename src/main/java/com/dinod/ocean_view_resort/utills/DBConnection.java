@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 public class DBConnection implements ConnectionProvider {
-    private Connection connection = null;
     private static final Properties dbProperties = loadProperties();
 
     // Singleton instance for static access
@@ -55,16 +54,13 @@ public class DBConnection implements ConnectionProvider {
     @Override
     public Connection createConnection() throws SQLException {
         try {
-            if (connection == null || connection.isClosed()) {
-                String driver = dbProperties.getProperty("db.driver");
-                String url = dbProperties.getProperty("db.url");
-                String user = dbProperties.getProperty("db.user");
-                String password = dbProperties.getProperty("db.password");
+            String driver = dbProperties.getProperty("db.driver");
+            String url = dbProperties.getProperty("db.url");
+            String user = dbProperties.getProperty("db.user");
+            String password = dbProperties.getProperty("db.password");
 
-                Class.forName(driver);
-                connection = DriverManager.getConnection(url, user, password);
-            }
-            return connection;
+            Class.forName(driver);
+            return DriverManager.getConnection(url, user, password);
         } catch (ClassNotFoundException e) {
             throw new SQLException("Database driver not found", e);
         }

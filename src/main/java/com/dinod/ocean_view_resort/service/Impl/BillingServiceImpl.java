@@ -44,6 +44,12 @@ public class BillingServiceImpl implements BillingService {
             try {
                 Reservation reservation = reservationService.getReservationById(reservationNo);
                 if (reservation != null) {
+                    // Update reservation status to PAID (New Business Logic)
+                    // Note: This calls ReservationService, which uses BillingDao, but not
+                    // BillingService,
+                    // so no circular dependency loop here for this specific path.
+                    reservationService.updateReservationStatus(reservationNo, "PAID");
+
                     Guest guest = guestService.getGuestById(reservation.getGuestID());
                     if (guest != null && guest.getEmail() != null && !guest.getEmail().isEmpty()) {
                         emailService.sendBillingInvoice(bill, reservation, guest);
@@ -65,5 +71,10 @@ public class BillingServiceImpl implements BillingService {
     @Override
     public Billing getBillByReservationId(int reservationNo) {
         return billingDao.getBillByReservationId(reservationNo);
+    }
+
+    @Override
+    public boolean cancelBillByReservationNo(int reservationNo) {
+        return billingDao.updateBillStatus(reservationNo, "CANCELLED");
     }
 }

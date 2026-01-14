@@ -11,6 +11,7 @@ public class Reservation {
     private double pricePerNight;
     private Date checkInDate;
     private Date checkOutDate;
+    private String status; // PENDING, PAID, CANCELLED
 
     // Transient fields for display purposes
     private String guestName;
@@ -26,6 +27,7 @@ public class Reservation {
         this.pricePerNight = pricePerNight;
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
+        this.status = "PENDING"; // Default status
     }
 
     public Reservation(int guestID, int roomNo, int staffID, String roomType, double pricePerNight, Date checkInDate,
@@ -37,6 +39,7 @@ public class Reservation {
         this.pricePerNight = pricePerNight;
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
+        this.status = "PENDING"; // Default status
     }
 
     public Reservation() {
@@ -104,6 +107,14 @@ public class Reservation {
 
     public void setCheckOutDate(Date checkOutDate) {
         this.checkOutDate = checkOutDate;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public String getGuestName() {

@@ -273,7 +273,7 @@
                             <tr>
                                 <th>Res. ID</th>
                                 <th>Guest</th>
-                                <th>Mobile</th>
+                                <th>Status</th>
                                 <th>Room</th>
                                 <th>Rate</th>
                                 <th>Dates</th>
@@ -343,14 +343,45 @@
             </div>
 
             <script>
+                let isInitialLoad = true;
+                let reloadTimeout = null;
+
                 document.addEventListener('DOMContentLoaded', () => {
                     loadReservations();
                     loadRooms();
+                    isInitialLoad = false;
+                });
+
+                // Debounced reload function to prevent rapid-fire requests
+                function scheduleReload() {
+                    if (reloadTimeout) {
+                        clearTimeout(reloadTimeout);
+                    }
+                    reloadTimeout = setTimeout(() => {
+                        console.log("Reloading data after navigation");
+                        loadRooms();
+                        loadReservations();
+                    }, 300); // 300ms debounce
+                }
+
+                // Detect when page becomes visible (handles back button navigation)
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden && !isInitialLoad) {
+                        scheduleReload();
+                    }
+                });
+
+                // Backup: Also handle pageshow event (for bfcache)
+                window.addEventListener('pageshow', (event) => {
+                    if (event.persisted && !isInitialLoad) {
+                        scheduleReload();
+                    }
                 });
 
                 // Load Rooms for Dropdown
                 function loadRooms() {
-                    fetch('../rooms') // RoomController returns JSON list of rooms
+                    // Add timestamp to prevent caching
+                    fetch('../rooms?t=' + new Date().getTime())
                         .then(res => res.json())
                         .then(rooms => {
                             const select = document.getElementById('roomNo');
@@ -382,9 +413,9 @@
 
                 // Load Reservations List
                 function loadReservations(query = '') {
-                    let url = '../reservations';
+                    let url = '../reservations?t=' + new Date().getTime(); // Anti-cache
                     if (query) {
-                        url += `?searchContact=\${encodeURIComponent(query)}`;
+                        url += `&searchContact=\${encodeURIComponent(query)}`;
                     }
 
                     fetch(url)
@@ -403,6 +434,28 @@
 
                                 const checkIn = new Date(r.checkInDate).toLocaleDateString();
                                 const checkOut = new Date(r.checkOutDate).toLocaleDateString();
+                                const status = r.status || 'PENDING';
+
+                                // Logic for Bill Button
+                                let billBtn = '';
+                                if (status === 'PAID') {
+                                    billBtn = `<button class="action-btn btn-bill" onclick="viewBill(\${r.reservationNo})">View Bill</button>`;
+                                } else if (status === 'CANCELLED') {
+                                    billBtn = ''; // No bill button for cancelled
+                                } else {
+                                    billBtn = `<button class="action-btn btn-bill" onclick="generateBill(\${r.reservationNo})">Bill</button>`;
+                                }
+
+                                // Logic for Status Dropdown
+                                // Prevent selecting PAID manually if currently PENDING or CANCELLED
+                                const isPaid = status === 'PAID';
+                                const statusOptions = `
+                                    <select onchange="updateStatus(\${r.reservationNo}, this.value, '\${status}')" style="padding:0.2rem; font-size:0.85rem; border-radius:4px; \${getStatusColor(status)}">
+                                        <option value="PENDING" \${status === 'PENDING' ? 'selected' : ''}>PENDING</option>
+                                        <option value="PAID" \${status === 'PAID' ? 'selected' : ''} \${!isPaid ? 'disabled' : ''}>PAID</option>
+                                        <option value="CANCELLED" \${status === 'CANCELLED' ? 'selected' : ''}>CANCELLED</option>
+                                    </select>
+                                `;
 
                                 tr.innerHTML = `
                             <td>#\${r.reservationNo}</td>
@@ -410,7 +463,7 @@
                                 <div style="font-weight:600;">\${r.guestName || 'Unknown'}</div>
                                 <div style="font-size:0.8em; color:#6b7280;">ID: \${r.guestID}</div>
                             </td>
-                            <td>\${r.guestContact || ''}</td>
+                            <td>\${statusOptions}</td>
                             <td>
                                 <strong style="color:var(--primary);">Room \${r.roomNo}</strong><br>
                                 <span style="font-size:0.85em; color:#6b7280;">\${r.roomType || ''}</span>
@@ -423,9 +476,7 @@
                             <td>
                                 <div style="display:flex; gap:0.5rem; align-items:center;">
                                     <button class="action-btn btn-edit" onclick="editRes(\${r.reservationNo})">Edit</button>
-                                    
-                                    <button class="action-btn btn-bill" onclick="generateBill(\${r.reservationNo})">Bill</button>
-
+                                    \${billBtn}
                                     <button class="action-btn btn-delete" onclick="deleteRes(\${r.reservationNo})">X</button>
                                 </div>
                             </td>
@@ -436,6 +487,42 @@
                         .catch(err => {
                             console.error(err);
                             document.getElementById('resTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Error loading data.</td></tr>';
+                        });
+                }
+
+                function getStatusColor(status) {
+                    if (status === 'PAID') return 'background:#dcfce7; color:#166534; border:1px solid #bbf7d0;';
+                    if (status === 'CANCELLED') return 'background:#fee2e2; color:#991b1b; border:1px solid #fecaca;';
+                    return 'background:#fef3c7; color:#92400e; border:1px solid #fde68a;'; // PENDING
+                }
+
+                function updateStatus(id, newStatus, currentStatus) {
+                    if (currentStatus === 'PAID' && newStatus === 'PENDING') {
+                        if (!confirm("Warning: Reverting to PENDING will CANCEL the existing bill. Continue?")) {
+                            loadReservations(); // Reset dropdown
+                            return;
+                        }
+                    }
+
+                    fetch('../reservations', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `action=updateStatus&reservationNo=\${id}&status=\${newStatus}`
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                // alert(data.message); // Optional: less spammy to just reload
+                                loadReservations();
+                                loadRooms(); // Refresh rooms to update booking availability
+                            } else {
+                                alert("Error: " + data.message);
+                                loadReservations(); // Reset on error
+                            }
+                        })
+                        .catch(err => {
+                            alert("Connection Error");
+                            loadReservations();
                         });
                 }
 
@@ -454,6 +541,11 @@
                             }
                         })
                         .catch(err => alert("Connection Error"));
+                }
+
+                function viewBill(id) {
+                    // Directly navigate to bill page for PAID reservations
+                    window.location.href = `bill.jsp?id=\${id}`;
                 }
 
                 function searchReservations() {
