@@ -1,13 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%
-    // Session Check - Admin Only
-    if (session.getAttribute("username") == null ||
-            !"Admin".equalsIgnoreCase((String) session.getAttribute("role"))) {
-
-        response.sendRedirect("../login.jsp");
-        return;
-    }
-%>
+    <% // Session Check - Admin Only
+        if (session.getAttribute("username")==null || !"Admin".equalsIgnoreCase((String)
+        session.getAttribute("role"))) { response.sendRedirect("../login.jsp"); return; } %>
         <!DOCTYPE html>
         <html lang="en">
 
@@ -128,7 +122,7 @@
                                 </div>
                                 <% } %>
 
-                                    <form action="${pageContext.request.contextPath}/auth" method="post">
+                                    <form id="registerForm" onsubmit="handleRegister(event)">
                                         <input type="hidden" name="action" value="register">
 
                                         <div class="form-group">
@@ -151,8 +145,63 @@
                                             </select>
                                         </div>
 
+                                        <div id="status-msg" class="alert hidden"></div>
                                         <button type="submit" class="btn">Register User</button>
                                     </form>
+
+                                    <script>
+                                        function handleRegister(event) {
+                                            event.preventDefault();
+                                            const form = event.target;
+                                            const statusDiv = document.getElementById('status-msg');
+                                            const btn = form.querySelector('button');
+
+                                            // Reset UI
+                                            statusDiv.className = 'alert hidden';
+                                            statusDiv.textContent = '';
+                                            btn.disabled = true;
+                                            btn.textContent = 'Registering...';
+
+                                            // Prepare Data
+                                            const params = new URLSearchParams();
+                                            params.append('action', 'register');
+                                            params.append('username', form.username.value);
+                                            params.append('password', form.password.value);
+                                            params.append('role', form.role.value);
+
+                                            // Call Web Service
+                                            fetch('${pageContext.request.contextPath}/auth', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                                },
+                                                body: params
+                                            })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    statusDiv.classList.remove('hidden');
+                                                    btn.disabled = false;
+                                                    btn.textContent = 'Register User';
+
+                                                    if (data.status === 'success') {
+                                                        statusDiv.className = 'alert alert-success';
+                                                        statusDiv.textContent = data.message;
+                                                        form.reset(); // Clear form on success
+                                                    } else {
+                                                        statusDiv.className = 'alert alert-error';
+                                                        statusDiv.textContent = data.message || 'Registration failed';
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    console.error('Error:', error);
+                                                    statusDiv.className = 'alert alert-error';
+                                                    statusDiv.textContent = 'Connection error. Please try again.';
+                                                    statusDiv.classList.remove('hidden');
+                                                    btn.disabled = false;
+                                                    btn.textContent = 'Register User';
+                                                });
+                                        }
+                                    </script>
             </div>
 
         </body>

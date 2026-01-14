@@ -7,6 +7,7 @@ import com.dinod.ocean_view_resort.service.Impl.UserServiceImpl;
 import com.dinod.ocean_view_resort.service.UserService;
 import com.dinod.ocean_view_resort.utills.ConnectionProvider;
 import com.dinod.ocean_view_resort.utills.DBConnection;
+import com.google.gson.Gson;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -15,11 +16,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @WebServlet(name = "AuthController", urlPatterns = { "/auth" })
 public class AuthController extends HttpServlet {
 
     private UserService userService;
+    private Gson gson = new Gson();
 
     @Override
     public void init() throws ServletException {
@@ -32,12 +36,20 @@ public class AuthController extends HttpServlet {
             throws ServletException, IOException {
         String action = request.getParameter("action");
 
+        // Set response type to JSON for Distributed Web Service requirement
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
         if ("login".equalsIgnoreCase(action)) {
             handleLogin(request, response);
         } else if ("register".equalsIgnoreCase(action)) {
             handleRegister(request, response);
         } else {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action");
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            Map<String, String> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", "Invalid action");
+            response.getWriter().write(gson.toJson(error));
         }
     }
 
@@ -47,19 +59,22 @@ public class AuthController extends HttpServlet {
         String pass = request.getParameter("password");
 
         User user = userService.authenticate(uname, pass);
-        HttpSession session = request.getSession();
+        Map<String, String> jsonResponse = new HashMap<>();
 
         if (user != null) {
-            session.setAttribute("id", user.getId());
-            session.setAttribute("username", user.getUserName());
-            session.setAttribute("role", user.getRole());
+            request.getSession().setAttribute("id", user.getId());
+            request.getSession().setAttribute("username", user.getUserName());
+            request.getSession().setAttribute("role", user.getRole());
 
             String redirectUrl = getRedirectPath(user.getRole());
-            response.sendRedirect(redirectUrl);
+
+            jsonResponse.put("status", "success");
+            jsonResponse.put("redirectUrl", redirectUrl);
         } else {
-            request.setAttribute("errorMessage", "Invalid credentials");
-            request.getRequestDispatcher("login.jsp").forward(request, response);
+            jsonResponse.put("status", "error");
+            jsonResponse.put("message", "Invalid credentials");
         }
+        response.getWriter().write(gson.toJson(jsonResponse));
     }
 
     private String getRedirectPath(String role) {
@@ -79,18 +94,20 @@ public class AuthController extends HttpServlet {
         String role = request.getParameter("role");
 
         User user = new User(uname, pass, role);
+        Map<String, String> jsonResponse = new HashMap<>();
 
         try {
             if (userService.validateCredentials(user)) {
-                request.setAttribute("successMessage", "User registered successfully");
-                request.getRequestDispatcher("admin-dashboard/register.jsp").forward(request, response);
+                jsonResponse.put("status", "success");
+                jsonResponse.put("message", "User registered successfully");
             } else {
-                request.setAttribute("errorMessage", "Registration failed: Database error");
-                request.getRequestDispatcher("admin-dashboard/register.jsp").forward(request, response);
+                jsonResponse.put("status", "error");
+                jsonResponse.put("message", "Registration failed: Database error");
             }
         } catch (IllegalArgumentException e) {
-            request.setAttribute("errorMessage", e.getMessage());
-            request.getRequestDispatcher("admin-dashboard/register.jsp").forward(request, response);
+            jsonResponse.put("status", "error");
+            jsonResponse.put("message", e.getMessage());
         }
+        response.getWriter().write(gson.toJson(jsonResponse));
     }
 }

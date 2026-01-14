@@ -1,12 +1,13 @@
 package com.dinod.ocean_view_resort.controller;
 
-import com.dinod.ocean_view_resort.dao.GuestDao;
-import com.dinod.ocean_view_resort.dao.Impl.GuestDaoImpl;
-import com.dinod.ocean_view_resort.model.Guest;
-import com.dinod.ocean_view_resort.service.GuestService;
-import com.dinod.ocean_view_resort.service.Impl.GuestServiceImpl;
+import com.dinod.ocean_view_resort.dao.Impl.RoomDaoImpl;
+import com.dinod.ocean_view_resort.dao.RoomDao;
+import com.dinod.ocean_view_resort.model.Room;
+import com.dinod.ocean_view_resort.service.Impl.RoomServiceImpl;
+import com.dinod.ocean_view_resort.service.RoomService;
 import com.dinod.ocean_view_resort.utills.ConnectionProvider;
 import com.dinod.ocean_view_resort.utills.DBConnection;
+import com.google.gson.Gson;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -14,48 +15,57 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
-import com.google.gson.Gson;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-@WebServlet(name = "GuestController", urlPatterns = { "/guests" })
-public class GuestController extends HttpServlet {
+@WebServlet(name = "RoomController", urlPatterns = { "/rooms" })
+public class RoomController extends HttpServlet {
 
-    private GuestService guestService;
+    private RoomService roomService;
     private Gson gson = new Gson();
 
     @Override
     public void init() throws ServletException {
         ConnectionProvider connectionProvider = DBConnection.getInstance();
-        GuestDao guestDao = new GuestDaoImpl(connectionProvider);
-        this.guestService = new GuestServiceImpl(guestDao);
+        RoomDao roomDao = new RoomDaoImpl(connectionProvider);
+        this.roomService = new RoomServiceImpl(roomDao);
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Serve JSON for Web Service Requirement
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        String searchContact = request.getParameter("searchContact");
-        List<Guest> guestList;
+        String action = request.getParameter("action");
+        if ("getById".equals(action)) {
+            try {
+                int roomNo = Integer.parseInt(request.getParameter("id"));
+                Room room = roomService.getRoomById(roomNo);
+                if (room != null) {
+                    response.getWriter().write(gson.toJson(room));
+                } else {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    Map<String, String> error = new HashMap<>();
+                    error.put("status", "error");
+                    error.put("message", "Room not found");
+                    response.getWriter().write(gson.toJson(error));
 
-        if (searchContact != null && !searchContact.trim().isEmpty()) {
-            Guest guest = guestService.getGuestByContactNo(searchContact.trim());
-            if (guest != null) {
-                guestList = java.util.Arrays.asList(guest);
-            } else {
-                guestList = java.util.Collections.emptyList();
+                }
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                Map<String, String> error = new HashMap<>();
+                error.put("status", "error");
+                error.put("message", "Invalid ID");
+                response.getWriter().write(gson.toJson(error));
             }
         } else {
-            guestList = guestService.getAllGuests();
+            List<Room> roomList = roomService.getAllRooms();
+            response.getWriter().write(gson.toJson(roomList));
         }
 
-        // Return List as JSON
-        response.getWriter().write(gson.toJson(guestList));
     }
 
     @Override
@@ -81,16 +91,16 @@ public class GuestController extends HttpServlet {
     public void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Map<String, String> jsonResponse = new HashMap<>();
         try {
-            int guestId = Integer.parseInt(request.getParameter("guestId"));
-            Guest guest = parseGuestFromRequest(request);
-            guest.setGuestID(guestId);
+            int roomNo = Integer.parseInt(request.getParameter("roomNo"));
+            Room room = parseRoomFromRequest(request);
+            room.setRoomNo(roomNo);
 
-            if (guestService.updateGuest(guest)) {
+            if (roomService.updateRoom(room)) {
                 jsonResponse.put("status", "success");
-                jsonResponse.put("message", "Guest updated successfully!");
+                jsonResponse.put("message", "Room updated successfully!");
             } else {
                 jsonResponse.put("status", "error");
-                jsonResponse.put("message", "Failed to update guest.");
+                jsonResponse.put("message", "Failed to update room.");
             }
         } catch (IllegalArgumentException e) {
             jsonResponse.put("status", "error");
@@ -108,13 +118,13 @@ public class GuestController extends HttpServlet {
             throws ServletException, IOException {
         Map<String, String> jsonResponse = new HashMap<>();
         try {
-            int guestId = Integer.parseInt(request.getParameter("guestId"));
-            if (guestService.deleteGuest(guestId)) {
+            int roomNo = Integer.parseInt(request.getParameter("roomNo"));
+            if (roomService.deleteRoom(roomNo)) {
                 jsonResponse.put("status", "success");
-                jsonResponse.put("message", "Guest deleted successfully!");
+                jsonResponse.put("message", "Room deleted successfully!");
             } else {
                 jsonResponse.put("status", "error");
-                jsonResponse.put("message", "Failed to delete guest.");
+                jsonResponse.put("message", "Failed to delete room.");
             }
         } catch (IllegalArgumentException e) {
             jsonResponse.put("status", "error");
@@ -131,13 +141,13 @@ public class GuestController extends HttpServlet {
             throws ServletException, IOException {
         Map<String, String> jsonResponse = new HashMap<>();
         try {
-            Guest guest = parseGuestFromRequest(request);
-            if (guestService.addGuest(guest)) {
+            Room room = parseRoomFromRequest(request);
+            if (roomService.addRoom(room)) {
                 jsonResponse.put("status", "success");
-                jsonResponse.put("message", "Guest added successfully!");
+                jsonResponse.put("message", "Room added successfully!");
             } else {
                 jsonResponse.put("status", "error");
-                jsonResponse.put("message", "Failed to add guest.");
+                jsonResponse.put("message", "Failed to add room.");
             }
         } catch (IllegalArgumentException e) {
             jsonResponse.put("status", "error");
@@ -150,14 +160,19 @@ public class GuestController extends HttpServlet {
         response.getWriter().write(gson.toJson(jsonResponse));
     }
 
-    // handleResponse method removed as it is no longer used (replaced by JSON
-    // responses)
+    // handleResponse method removed as it is no longer used
 
-    private Guest parseGuestFromRequest(HttpServletRequest request) {
-        String name = request.getParameter("name");
-        String address = request.getParameter("address");
-        String contactNo = request.getParameter("contactNo");
+    private Room parseRoomFromRequest(HttpServletRequest request) {
 
-        return new Guest(name, address, contactNo);
+        String roomType = request.getParameter("roomType");
+        double price = Double.parseDouble(request.getParameter("pricePerNight"));
+        boolean isAvailable = request.getParameter("isAvailable") != null; // checkbox sends "on" or null usually, or we
+                                                                           // can check simple check
+
+        // In JSP checkbox value="true", so if checked sends "true".
+        // If not checked, nothing is sent.
+        // So checking != null is usually enough if value is present.
+
+        return new Room(0, roomType, price, isAvailable);
     }
 }

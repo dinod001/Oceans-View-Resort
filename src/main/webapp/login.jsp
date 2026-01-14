@@ -175,7 +175,7 @@
                         </div>
                         <% } %>
 
-                            <form action="auth" method="post">
+                            <form id="loginForm" onsubmit="handleLogin(event)">
                                 <input type="hidden" name="action" value="login">
 
                                 <div class="form-group">
@@ -188,9 +188,60 @@
                                     <input type="password" id="login-password" name="password" required
                                         placeholder="Enter your password">
                                 </div>
+                                <div id="error-msg" class="error hidden"></div>
                                 <button type="submit" class="btn">Sign In</button>
                             </form>
             </div>
+        </div>
+
+        <script>
+            function handleLogin(event) {
+                event.preventDefault();
+                const form = event.target;
+                const errorDiv = document.getElementById('error-msg');
+                const btn = form.querySelector('button');
+
+                // Reset UI
+                errorDiv.classList.add('hidden');
+                errorDiv.textContent = '';
+                btn.disabled = true;
+                btn.textContent = 'Signing in...';
+
+                // Prepare Data
+                const params = new URLSearchParams();
+                params.append('action', 'login');
+                params.append('username', form.username.value);
+                params.append('password', form.password.value);
+
+                // Call Web Service (Distributed App Requirement)
+                fetch('auth', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: params
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            window.location.href = data.redirectUrl;
+                        } else {
+                            errorDiv.textContent = data.message || 'Login failed';
+                            errorDiv.classList.remove('hidden');
+                            btn.disabled = false;
+                            btn.textContent = 'Sign In';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        errorDiv.textContent = 'Connection error. Please try again.';
+                        errorDiv.classList.remove('hidden');
+                        btn.disabled = false;
+                        btn.textContent = 'Sign In';
+                    });
+            }
+        </script>
+        </div>
         </div>
 
     </body>
