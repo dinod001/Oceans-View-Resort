@@ -19,4 +19,7 @@ public interface RoomDao {
 
     // Get all rooms
     List<Room> getAllRooms();
+
+    // Search rooms with filters
+    List<Room> searchRooms(String roomNo, String type, String status, Double minPrice, Double maxPrice);
 }

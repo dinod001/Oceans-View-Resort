@@ -1,11 +1,23 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ page import="java.util.List" %>
         <%@ page import="com.dinod.ocean_view_resort.model.User" %>
-            <% /* Session Check - Admin Only */ if (session.getAttribute("username")==null ||
-                !"Admin".equalsIgnoreCase((String) session.getAttribute("role"))) {
-                response.sendRedirect("../login.jsp"); return; } %>
-                <!DOCTYPE html>
-                <html lang="en">
+<%
+    // Security: Prevent back button access
+    response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    response.setHeader("Pragma", "no-cache");
+    response.setDateHeader("Expires", 0);
+
+    // Session Check - Admin Only
+    String username = (String) session.getAttribute("username");
+    String role = (String) session.getAttribute("role");
+
+    if (username == null || !"Admin".equalsIgnoreCase(role)) {
+        response.sendRedirect("../login.jsp");
+        return; // Stop executing the rest of the page
+    }
+%>
+
+<html lang="en">
 
                 <head>
                     <meta charset="UTF-8">
@@ -247,7 +259,40 @@
                         .hidden {
                             display: none;
                         }
+
+                        .password-container {
+                            position: relative;
+                        }
+
+                        .password-toggle {
+                            position: absolute;
+                            right: 10px;
+                            top: 50%;
+                            transform: translateY(-50%);
+                            cursor: pointer;
+                            color: var(--text-light);
+                            transition: color 0.2s;
+                            z-index: 5;
+                        }
+
+                        .password-toggle:hover {
+                            color: var(--primary);
+                        }
+
+                        #passwordInput,
+                        #confirmPasswordInput {
+                            padding-right: 40px;
+                        }
+
+                        .error-msg {
+                            color: var(--danger);
+                            font-size: 0.75rem;
+                            margin-top: 0.25rem;
+                            display: none;
+                        }
                     </style>
+                    <link rel="stylesheet"
+                        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
                 </head>
 
                 <body>
@@ -317,9 +362,26 @@
 
                                 <div class="form-group" id="passwordGroup">
                                     <label>Access Password</label>
-                                    <input type="password" name="password" id="passwordInput">
-                                    <small style="color:var(--text-light); font-size: 0.75rem;">Only required for new
-                                        users.</small>
+                                    <div class="password-container">
+                                        <input type="password" name="password" id="passwordInput">
+                                        <i class="fas fa-eye password-toggle"
+                                            onclick="togglePassword('passwordInput', this)"></i>
+                                    </div>
+                                    <small id="passwordHint"
+                                        style="color:var(--text-light); font-size: 0.75rem; display: block; line-height: 1.3; margin-top: 0.25rem;">
+                                        Min 8 chars, include an uppercase letter, a number, and a special character
+                                        (@$!%*?&).
+                                    </small>
+                                </div>
+
+                                <div class="form-group" id="confirmPasswordGroup">
+                                    <label>Confirm Password</label>
+                                    <div class="password-container">
+                                        <input type="password" id="confirmPasswordInput">
+                                        <i class="fas fa-eye password-toggle"
+                                            onclick="togglePassword('confirmPasswordInput', this)"></i>
+                                    </div>
+                                    <small id="matchError" class="error-msg">Passwords do not match!</small>
                                 </div>
 
                                 <div class="form-group">
@@ -332,8 +394,14 @@
 
                                 <div class="form-group" id="designationGroup">
                                     <label>Designation</label>
-                                    <input type="text" name="designation" id="designationInput"
-                                        placeholder="e.g. Receptionist">
+                                    <select name="designation" id="designationInput">
+                                        <option value="Receptionist">Receptionist</option>
+                                        <option value="General Staff">General Staff</option>
+                                        <option value="Manager">Hotel Manager</option>
+                                        <option value="Housekeeping">Housekeeping</option>
+                                        <option value="Chef">Chef / Kitchen Staff</option>
+                                        <option value="Security">Security</option>
+                                    </select>
                                 </div>
 
                                 <div class="form-group">
@@ -424,10 +492,17 @@
                             document.getElementById('usernameInput').disabled = true;
                             document.getElementById('emailInput').value = u.email;
                             document.getElementById('roleSelect').value = u.role;
-                            document.getElementById('designationInput').value = u.designation || '';
+
+                            // Handle Designation Dropdown
+                            const desigSelect = document.getElementById('designationInput');
+                            desigSelect.value = u.designation || 'General Staff';
+
                             document.getElementById('contactInput').value = u.contactNo || '';
                             document.getElementById('addressInput').value = u.address || '';
+                            document.getElementById('passwordInput').value = '';
+                            document.getElementById('confirmPasswordInput').value = '';
                             document.getElementById('passwordInput').required = false;
+                            document.getElementById('confirmPasswordInput').required = false;
                             document.getElementById('submitBtn').innerText = 'Update User';
                             document.getElementById('cancelBtn').classList.remove('hidden');
                             toggleDesignation();
@@ -439,19 +514,49 @@
                             form.elements['action'].value = 'add';
                             document.getElementById('usernameInput').disabled = false;
                             document.getElementById('passwordInput').required = true;
+                            document.getElementById('confirmPasswordInput').required = true;
                             document.getElementById('formTitle').innerText = 'Manage User';
                             document.getElementById('submitBtn').innerText = 'Register User';
                             document.getElementById('cancelBtn').classList.add('hidden');
+                            document.getElementById('matchError').style.display = 'none';
                             toggleDesignation();
                         }
 
                         function handleStaffSubmit(e) {
                             e.preventDefault();
+                            const form = e.target;
                             const btn = document.getElementById('submitBtn');
                             const userF = document.getElementById('usernameInput');
+                            const passInput = document.getElementById('passwordInput');
+                            const confirmInput = document.getElementById('confirmPasswordInput');
+                            const action = form.elements['action'].value;
+                            const matchError = document.getElementById('matchError');
+
+                            matchError.style.display = 'none';
+
+                            // Client-side Password Validation
+                            if (action === 'add' || (action === 'update' && passInput.value.trim() !== "")) {
+                                const pass = passInput.value;
+                                const confirmPass = confirmInput.value;
+
+                                // Policy check
+                                const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+                                if (!regex.test(pass)) {
+                                    alert("Password must be at least 8 characters, with 1 uppercase, 1 number, and 1 special char (@$!%*?&).");
+                                    return;
+                                }
+
+                                // Matching check
+                                if (pass !== confirmPass) {
+                                    matchError.style.display = 'block';
+                                    confirmInput.focus();
+                                    return;
+                                }
+                            }
+
                             const wasD = userF.disabled;
                             if (wasD) userF.disabled = false;
-                            const params = new URLSearchParams(new FormData(e.target));
+                            const params = new URLSearchParams(new FormData(form));
                             if (wasD) userF.disabled = true;
 
                             btn.disabled = true;
@@ -479,6 +584,19 @@
                         function toggleDesignation() {
                             const role = document.getElementById('roleSelect').value;
                             document.getElementById('designationGroup').style.display = (role === 'Staff') ? 'block' : 'none';
+                        }
+
+                        function togglePassword(inputId, icon) {
+                            const input = document.getElementById(inputId);
+                            if (input.type === 'password') {
+                                input.type = 'text';
+                                icon.classList.remove('fa-eye');
+                                icon.classList.add('fa-eye-slash');
+                            } else {
+                                input.type = 'password';
+                                icon.classList.remove('fa-eye-slash');
+                                icon.classList.add('fa-eye');
+                            }
                         }
                     </script>
                 </body>

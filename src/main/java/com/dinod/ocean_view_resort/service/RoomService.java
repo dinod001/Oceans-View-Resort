@@ -15,4 +15,6 @@ public interface RoomService {
     Room getRoomById(int roomNo);
 
     List<Room> getAllRooms();
+
+    List<Room> searchRooms(String roomNo, String type, String status, Double minPrice, Double maxPrice);
 }

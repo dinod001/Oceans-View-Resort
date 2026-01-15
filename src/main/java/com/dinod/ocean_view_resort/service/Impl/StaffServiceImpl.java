@@ -73,9 +73,17 @@ public class StaffServiceImpl implements StaffService {
         }
 
         if (isNew) {
-            if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+            String password = user.getPassword();
+            if (password == null || password.trim().isEmpty()) {
                 throw new IllegalArgumentException("Password is required for new registration!");
             }
+            // Password Policy: Min 8 chars, 1 uppercase, 1 number, 1 special char
+            String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+            if (!password.matches(passwordPattern)) {
+                throw new IllegalArgumentException(
+                        "Password must be at least 8 characters long, include an uppercase letter, a number, and a special character!");
+            }
+
             if (staffDao.isUsernameExists(user.getUserName())) {
                 throw new IllegalArgumentException("Username '" + user.getUserName() + "' is already taken!");
             }
@@ -83,6 +91,16 @@ public class StaffServiceImpl implements StaffService {
                 throw new IllegalArgumentException("Email '" + user.getEmail() + "' is already registered!");
             }
         } else {
+            // Check if password update is requested
+            String password = user.getPassword();
+            if (password != null && !password.trim().isEmpty()) {
+                String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+                if (!password.matches(passwordPattern)) {
+                    throw new IllegalArgumentException(
+                            "New password must be at least 8 characters long, include an uppercase letter, a number, and a special character!");
+                }
+            }
+
             // For updates, we should check if email changed and if new email belongs to
             // another user
             User existing = staffDao.getStaffById(user.getId());

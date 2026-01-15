@@ -40,16 +40,11 @@ public class GuestController extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        String searchContact = request.getParameter("searchContact");
+        String query = request.getParameter("query");
         List<Guest> guestList;
 
-        if (searchContact != null && !searchContact.trim().isEmpty()) {
-            Guest guest = guestService.getGuestByContactNo(searchContact.trim());
-            if (guest != null) {
-                guestList = java.util.Arrays.asList(guest);
-            } else {
-                guestList = java.util.Collections.emptyList();
-            }
+        if (query != null && !query.trim().isEmpty()) {
+            guestList = guestService.searchGuests(query.trim());
         } else {
             guestList = guestService.getAllGuests();
         }

@@ -41,6 +41,8 @@ public class AuthController extends HttpServlet {
 
         if ("login".equalsIgnoreCase(action)) {
             handleLogin(request, response);
+        } else if ("logout".equalsIgnoreCase(action)) {
+            handleLogout(request, response);
         } else {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             Map<String, String> error = new HashMap<>();
@@ -48,6 +50,28 @@ public class AuthController extends HttpServlet {
             error.put("message", "Invalid action");
             response.getWriter().write(gson.toJson(error));
         }
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String action = request.getParameter("action");
+        if ("logout".equalsIgnoreCase(action)) {
+            handleLogout(request, response);
+        } else {
+            response.sendRedirect("login.jsp");
+        }
+    }
+
+    private void handleLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        request.getSession().invalidate();
+
+        // Security: Prevent back button access
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
+
+        String contextPath = request.getContextPath();
+        response.sendRedirect(contextPath + "/login.jsp");
     }
 
     private void handleLogin(HttpServletRequest request, HttpServletResponse response)

@@ -1,5 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
+    // Security: Prevent back button access
+    response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    response.setHeader("Pragma", "no-cache");
+    response.setDateHeader("Expires", 0);
+
     // Session Check - Staff Only
     String username = (String) session.getAttribute("username");
     String role = (String) session.getAttribute("role");
@@ -10,6 +15,7 @@
         return; // Stop executing the rest of the page
     }
 %>
+
 
 
 <!DOCTYPE html>
@@ -245,7 +251,8 @@
                                 <li>Rooms already booked for specific dates might still appear in the list globally, but
                                     the system validates dates upon submission (logic dependent).</li>
                                 <li>Look for the price per night displayed in the dropdown (e.g.,
-                                    <code>Room 101 - Deluxe ($150.0)</code>).</li>
+                                    <code>Room 101 - Deluxe ($150.0)</code>).
+                                </li>
                             </ul>
                         </li>
                         <li><strong>Choose Dates:</strong> Select Check-in and Check-out dates.</li>

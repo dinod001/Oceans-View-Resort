@@ -16,4 +16,6 @@ public interface GuestDao {
     List<Guest> getAllGuests();
 
     Guest getGuestByContactNo(String contactNo);
+
+    List<Guest> searchGuests(String query);
 }

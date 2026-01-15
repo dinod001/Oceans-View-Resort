@@ -84,4 +84,9 @@ public class GuestServiceImpl implements GuestService {
     public Guest getGuestByContactNo(String contactNo) {
         return guestDao.getGuestByContactNo(contactNo);
     }
+
+    @Override
+    public List<Guest> searchGuests(String query) {
+        return guestDao.searchGuests(query);
+    }
 }

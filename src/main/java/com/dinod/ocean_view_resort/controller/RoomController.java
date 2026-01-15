@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,49 @@ public class RoomController extends HttpServlet {
                 response.getWriter().write(gson.toJson(error));
             }
         } else {
-            List<Room> roomList = roomService.getAllRooms();
+            String roomNo = request.getParameter("roomNo");
+            String type = request.getParameter("type");
+            String status = request.getParameter("status");
+            String minPriceStr = request.getParameter("minPrice");
+            String maxPriceStr = request.getParameter("maxPrice");
+
+            Double minPrice = null;
+            Double maxPrice = null;
+            boolean priceError = false;
+
+            if (minPriceStr != null && !minPriceStr.trim().isEmpty()) {
+                try {
+                    minPrice = Double.parseDouble(minPriceStr);
+                } catch (NumberFormatException e) {
+                    priceError = true;
+                }
+            }
+            if (maxPriceStr != null && !maxPriceStr.trim().isEmpty()) {
+                try {
+                    maxPrice = Double.parseDouble(maxPriceStr);
+                } catch (NumberFormatException e) {
+                    priceError = true;
+                }
+            }
+
+            List<Room> roomList;
+            // A search is intended if ANY search parameter is present and not empty/default
+            boolean isSearchRequested = (roomNo != null && !roomNo.trim().isEmpty()) ||
+                    (type != null && !"All".equalsIgnoreCase(type)) ||
+                    (status != null && !"All".equalsIgnoreCase(status)) ||
+                    (minPriceStr != null && !minPriceStr.trim().isEmpty()) ||
+                    (maxPriceStr != null && !maxPriceStr.trim().isEmpty());
+
+            if (isSearchRequested) {
+                if (priceError) {
+                    // Return empty list if price parsing failed during an intended search
+                    roomList = new ArrayList<>();
+                } else {
+                    roomList = roomService.searchRooms(roomNo, type, status, minPrice, maxPrice);
+                }
+            } else {
+                roomList = roomService.getAllRooms();
+            }
             response.getWriter().write(gson.toJson(roomList));
         }
 
