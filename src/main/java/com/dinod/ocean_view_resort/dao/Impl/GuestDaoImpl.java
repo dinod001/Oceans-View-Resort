@@ -149,4 +149,31 @@ public class GuestDaoImpl implements GuestDao {
         }
         return null;
     }
+
+    @Override
+    public List<Guest> searchGuests(String query) {
+        List<Guest> guests = new ArrayList<>();
+        String sql = "SELECT * FROM guests WHERE contact_no LIKE ? OR email LIKE ?";
+        try (Connection con = connectionProvider.createConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+
+            String searchPattern = "%" + query + "%";
+            ps.setString(1, searchPattern);
+            ps.setString(2, searchPattern);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Guest guest = new Guest();
+                guest.setGuestID(rs.getInt("guest_id"));
+                guest.setName(rs.getString("name"));
+                guest.setAddress(rs.getString("address"));
+                guest.setContactNo(rs.getString("contact_no"));
+                guest.setEmail(rs.getString("email"));
+                guests.add(guest);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return guests;
+    }
 }

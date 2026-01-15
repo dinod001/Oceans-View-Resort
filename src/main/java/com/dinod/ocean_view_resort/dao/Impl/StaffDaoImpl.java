@@ -5,6 +5,7 @@ import com.dinod.ocean_view_resort.model.User;
 import com.dinod.ocean_view_resort.model.Staff;
 import com.dinod.ocean_view_resort.utills.ConnectionProvider;
 import com.dinod.ocean_view_resort.utills.DBConnection;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -28,7 +29,8 @@ public class StaffDaoImpl implements StaffDao {
             try (PreparedStatement ps = con.prepareStatement(userQuery, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, user.getUserName());
                 ps.setString(2, user.getEmail());
-                ps.setString(3, user.getPassword());
+                String hashedPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
+                ps.setString(3, hashedPassword);
                 ps.setString(4, user.getContactNo());
                 ps.setString(5, user.getAddress());
                 ps.setString(6, user.getRole());
@@ -105,7 +107,8 @@ public class StaffDaoImpl implements StaffDao {
                 ps.setString(4, user.getRole());
 
                 if (hasPassword) {
-                    ps.setString(5, user.getPassword());
+                    String hashedPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
+                    ps.setString(5, hashedPassword);
                     ps.setInt(6, user.getId());
                 } else {
                     ps.setInt(5, user.getId());

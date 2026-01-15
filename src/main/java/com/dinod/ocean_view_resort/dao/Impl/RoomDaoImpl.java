@@ -121,4 +121,56 @@ public class RoomDaoImpl implements RoomDao {
         }
         return rooms;
     }
+
+    @Override
+    public List<Room> searchRooms(String roomNo, String type, String status, Double minPrice, Double maxPrice) {
+        List<Room> rooms = new ArrayList<>();
+        StringBuilder queryBuilder = new StringBuilder("SELECT * FROM rooms WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        if (roomNo != null && !roomNo.trim().isEmpty()) {
+            queryBuilder.append(" AND room_no LIKE ?");
+            params.add("%" + roomNo.trim() + "%");
+        }
+        if (type != null && !"All".equalsIgnoreCase(type) && !type.trim().isEmpty()) {
+            queryBuilder.append(" AND room_type = ?");
+            params.add(type.trim());
+        }
+        if (status != null && !"All".equalsIgnoreCase(status) && !status.trim().isEmpty()) {
+            queryBuilder.append(" AND is_available = ?");
+            params.add("Available".equalsIgnoreCase(status));
+        }
+
+        // Price Filtering
+        if (minPrice != null) {
+            queryBuilder.append(" AND price_per_night >= ?");
+            params.add(minPrice);
+        }
+        if (maxPrice != null) {
+            queryBuilder.append(" AND price_per_night <= ?");
+            params.add(maxPrice);
+        }
+
+        try (Connection con = connectionProvider.createConnection();
+                PreparedStatement ps = con.prepareStatement(queryBuilder.toString())) {
+
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Room room = new Room();
+                    room.setRoomNo(rs.getInt("room_no"));
+                    room.setRoomType(rs.getString("room_type"));
+                    room.setPricePerNight(rs.getDouble("price_per_night"));
+                    room.setAvailable(rs.getBoolean("is_available"));
+                    rooms.add(room);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return rooms;
+    }
 }

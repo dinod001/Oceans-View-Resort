@@ -64,4 +64,9 @@ public class RoomServiceImpl implements RoomService {
     public List<Room> getAllRooms() {
         return roomDao.getAllRooms();
     }
+
+    @Override
+    public List<Room> searchRooms(String roomNo, String type, String status, Double minPrice, Double maxPrice) {
+        return roomDao.searchRooms(roomNo, type, status, minPrice, maxPrice);
+    }
 }
