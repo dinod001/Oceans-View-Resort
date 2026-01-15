@@ -1,0 +1,310 @@
+/* Ocean View Resort - Global Design System */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    /* Color Palette */
+    --primary: #0f172a;
+    /* Slate Black (Header) */
+    --primary-light: #1e293b;
+    --accent: #3b82f6;
+    /* Vibrant Blue (Action) */
+    --accent-dark: #2563eb;
+    --bg: #f8fafc;
+    /* Clean Light Grey */
+    --card-bg: #ffffff;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --text-dark: #0f172a;
+    --primary-dark: #020617;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+
+    /* Spacing & Sizing */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* 1. Global Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* 2. Common Layout */
+.container {
+    max-width: 1400px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 2.5rem;
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+}
+
+header {
+    background: var(--primary);
+    color: white;
+    padding: 1.25rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-md);
+}
+
+header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+
+.back-link {
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.back-link:hover {
+    color: white;
+}
+
+/* 3. Cards */
+.card {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary);
+    border-bottom: 2px solid var(--bg);
+    padding-bottom: 0.75rem;
+}
+
+/* 4. Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--accent-dark);
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text);
+}
+
+.btn-outline:hover {
+    background: var(--bg);
+    border-color: var(--text-light);
+}
+
+/* Action Buttons for Tables */
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    background: white;
+    margin-right: 0.25rem;
+}
+
+.btn-edit {
+    color: var(--accent);
+    border-color: #bfdbfe;
+    background: #eff6ff;
+}
+
+.btn-edit:hover {
+    background: #dbeafe;
+    border-color: var(--accent);
+}
+
+.btn-delete {
+    color: var(--danger);
+    border-color: #fecaca;
+    background: #fef2f2;
+}
+
+.btn-delete:hover {
+    background: #fee2e2;
+    border-color: var(--danger);
+}
+
+/* 5. Forms */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--primary-light);
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    outline: none;
+    background-color: var(--card-bg);
+}
+
+input:focus,
+select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    align-items: flex-end;
+}
+
+.search-row>div,
+.search-row>.form-group {
+    margin-bottom: 0;
+    flex: 1;
+}
+
+.search-row .btn {
+    padding: 0.75rem 1.25rem;
+}
+
+/* 6. Tables */
+.table-container {
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    padding: 1rem;
+    background: #f8fafc;
+    color: var(--text-light);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    border-bottom: 2px solid var(--border);
+}
+
+td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.925rem;
+    color: var(--text);
+    vertical-align: top;
+    line-height: 1.4;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover {
+    background-color: rgba(59, 130, 246, 0.02);
+}
+
+/* 7. Utilities */
+.text-center {
+    text-align: center;
+}
+
+.hidden {
+    display: none;
+}
+
+.badge {
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}

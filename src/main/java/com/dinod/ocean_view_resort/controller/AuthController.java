@@ -100,7 +100,7 @@ public class AuthController extends HttpServlet {
 
     private String getRedirectPath(String role) {
         if ("Admin".equalsIgnoreCase(role)) {
-            return "admin-dashboard/staff.jsp";
+            return "admin-dashboard/index.jsp";
         } else if ("Staff".equalsIgnoreCase(role)) {
             return "staff-dashboard/index.jsp";
         } else {

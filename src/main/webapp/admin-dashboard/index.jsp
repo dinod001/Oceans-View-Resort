@@ -5,12 +5,11 @@ response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 response.setHeader("Pragma", "no-cache");
 response.setDateHeader("Expires", 0);
 
-// Session Check - Staff Only
+// Session Check - Admin Only
 String username = (String) session.getAttribute("username");
 String role = (String) session.getAttribute("role");
 
-if (username == null || !"Staff".equalsIgnoreCase(role)) {
-// Redirect unauthorized users to login page
+if (username == null || !"Admin".equalsIgnoreCase(role)) {
 response.sendRedirect("../login.jsp");
 return; // Stop executing the rest of the page
 }
@@ -22,7 +21,7 @@ return; // Stop executing the rest of the page
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Dashboard | Ocean View Resort</title>
+    <title>Admin Dashboard | Ocean View Resort</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -54,7 +53,7 @@ return; // Stop executing the rest of the page
         /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
             margin-bottom: 3rem;
         }
@@ -86,24 +85,20 @@ return; // Stop executing the rest of the page
             font-size: 1.5rem;
         }
 
-        .icon-res {
+        .icon-rooms {
             background: #eff6ff;
             color: #3b82f6;
         }
 
-        /* Blue */
-        .icon-rooms {
+        .icon-staff {
             background: #f0fdf4;
             color: #10b981;
         }
 
-        /* Green */
-        .icon-guests {
+        .icon-res {
             background: #fff7ed;
             color: #f59e0b;
         }
-
-        /* Orange */
 
         .stat-info h3 {
             font-size: 0.875rem;
@@ -182,13 +177,51 @@ return; // Stop executing the rest of the page
         .nav-card:hover .nav-card-footer {
             background: #eff6ff;
         }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f0fdf4;
+            color: #166534;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
+        }
     </style>
 </head>
 
 <body>
 
     <header>
-        <h1>Ocean View Resort | Staff Portal</h1>
+        <h1>Ocean View Resort | Admin Control</h1>
         <div style="display:flex; gap:1rem; align-items:center;">
             <span style="font-size:0.9rem; color:#94a3b8;">Welcome, <strong>
                     <%= username %>
@@ -201,77 +234,64 @@ return; // Stop executing the rest of the page
 
     <div class="container">
         <div class="welcome-section">
-            <h2>Operational Hub</h2>
-            <p>Monitor guest arrivals, room availability, and resort operations. Your efficiency drives our
-                excellence.</p>
+            <h2>Administrator Overview</h2>
+            <p>Manage resort infrastructure and staff operations from a central interface.</p>
         </div>
 
         <!-- Stats Section -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon icon-res">
-                    <i class="fas fa-concierge-bell"></i>
-                </div>
-                <div class="stat-info">
-                    <h3>Active Reservations</h3>
-                    <div id="resCount" class="stat-value">--</div>
-                </div>
-            </div>
-            <div class="stat-card">
                 <div class="stat-icon icon-rooms">
-                    <i class="fas fa-key"></i>
+                    <i class="fas fa-door-open"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>Available Rooms</h3>
+                    <h3>Total Rooms</h3>
                     <div id="roomCount" class="stat-value">--</div>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon icon-guests">
-                    <i class="fas fa-users"></i>
+                <div class="stat-icon icon-staff">
+                    <i class="fas fa-user-shield"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>Registered Guests</h3>
-                    <div id="guestCount" class="stat-value">--</div>
+                    <h3>Active Staff</h3>
+                    <div id="staffCount" class="stat-value">--</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-res">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Reservations</h3>
+                    <div id="resCount" class="stat-value">--</div>
                 </div>
             </div>
         </div>
 
         <!-- Navigation Grid -->
         <div class="nav-grid">
-            <a href="reservations.jsp" class="nav-card">
+            <a href="rooms.jsp" class="nav-card">
                 <div class="nav-card-body">
-                    <div class="nav-card-icon"><i class="fas fa-calendar-alt"></i></div>
-                    <h4>Manage Reservations</h4>
-                    <p>Process check-ins and check-outs, create new bookings, and manage the reservation
-                        schedule.</p>
+                    <div class="nav-card-icon"><i class="fas fa-bed"></i></div>
+                    <h4>Room Management</h4>
+                    <p>Configure room types, pricing, and availability. Monitor guest stays and room maintenance
+                        status.</p>
                 </div>
                 <div class="nav-card-footer">
-                    Manage Front Desk <i class="fas fa-chevron-right"></i>
+                    Manage Infrastructure <i class="fas fa-chevron-right"></i>
                 </div>
             </a>
 
-            <a href="guest.jsp" class="nav-card">
+            <a href="staff.jsp" class="nav-card">
                 <div class="nav-card-body">
-                    <div class="nav-card-icon"><i class="fas fa-address-book"></i></div>
-                    <h4>Guest Directory</h4>
-                    <p>Lookup guest profiles, update contact information, and review guest history for
-                        personalized service.</p>
+                    <div class="nav-card-icon"><i class="fas fa-users-cog"></i></div>
+                    <h4>Staff Control</h4>
+                    <p>Manage employee accounts, assign roles, and monitor system access. Add or remove staff
+                        members.</p>
                 </div>
                 <div class="nav-card-footer">
-                    Manage Profiles <i class="fas fa-chevron-right"></i>
-                </div>
-            </a>
-
-            <a href="help.jsp" class="nav-card">
-                <div class="nav-card-body">
-                    <div class="nav-card-icon"><i class="fas fa-question-circle"></i></div>
-                    <h4>Help & Support</h4>
-                    <p>Access the staff manual, troubleshooting guides, and system documentation for operational
-                        support.</p>
-                </div>
-                <div class="nav-card-footer">
-                    View Documentation <i class="fas fa-chevron-right"></i>
+                    Manage Access <i class="fas fa-chevron-right"></i>
                 </div>
             </a>
         </div>
@@ -283,7 +303,29 @@ return; // Stop executing the rest of the page
         });
 
         async function fetchStats() {
-            // 1. Fetch Reservations
+            // Fetch Rooms
+            fetch('../rooms')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('roomCount').textContent = data.length;
+                })
+                .catch(err => {
+                    console.error('Error fetching rooms:', err);
+                    document.getElementById('roomCount').textContent = 'N/A';
+                });
+
+            // Fetch Staff (Corrected endpoint)
+            fetch('../staff-mgmt')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('staffCount').textContent = data.length;
+                })
+                .catch(err => {
+                    console.error('Error fetching staff:', err);
+                    document.getElementById('staffCount').textContent = 'N/A';
+                });
+
+            // Fetch Reservations
             fetch('../reservations')
                 .then(res => res.json())
                 .then(data => {
@@ -292,29 +334,6 @@ return; // Stop executing the rest of the page
                 .catch(err => {
                     console.error('Error fetching reservations:', err);
                     document.getElementById('resCount').textContent = 'N/A';
-                });
-
-            // 2. Fetch Rooms (Filtering for Available)
-            fetch('../rooms')
-                .then(res => res.json())
-                .then(data => {
-                    const available = data.filter(r => r.isAvailable === true || r.isAvailable === "true");
-                    document.getElementById('roomCount').textContent = available.length;
-                })
-                .catch(err => {
-                    console.error('Error fetching rooms:', err);
-                    document.getElementById('roomCount').textContent = 'N/A';
-                });
-
-            // 3. Fetch Guests
-            fetch('../guests')
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById('guestCount').textContent = data.length;
-                })
-                .catch(err => {
-                    console.error('Error fetching guests:', err);
-                    document.getElementById('guestCount').textContent = 'N/A';
                 });
         }
     </script>

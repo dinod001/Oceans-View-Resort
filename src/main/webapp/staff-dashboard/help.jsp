@@ -1,304 +1,296 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.util.*" %>
 <%
-    // Security: Prevent back button access
-    response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    response.setHeader("Pragma", "no-cache");
-    response.setDateHeader("Expires", 0);
+// Security: Prevent back button access
+response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+response.setHeader("Pragma", "no-cache");
+response.setDateHeader("Expires", 0);
 
-    // Session Check - Staff Only
-    String username = (String) session.getAttribute("username");
-    String role = (String) session.getAttribute("role");
+// Session Check - Staff Only
+String username = (String) session.getAttribute("username");
+String role = (String) session.getAttribute("role");
 
-    if (username == null || !"Staff".equalsIgnoreCase(role)) {
-        // Redirect unauthorized users to login page
-        response.sendRedirect("../login.jsp");
-        return; // Stop executing the rest of the page
-    }
+if (username == null || !"Staff".equalsIgnoreCase(role)) {
+// Redirect unauthorized users to login page
+response.sendRedirect("../login.jsp");
+return; // Stop executing the rest of the page
+}
 %>
 
-
-
 <!DOCTYPE html>
-        <html lang="en">
+<html lang="en">
 
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>System Help | Staff Dashboard</title>
-            <style>
-                :root {
-                    --primary: #006994;
-                    --primary-dark: #005a80;
-                    --text: #1f2937;
-                    --text-light: #6b7280;
-                    --bg: #f3f4f6;
-                    --white: #ffffff;
-                    --border: #e5e7eb;
-                }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Help Section | Ocean View Resort</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-                * {
-                    box-sizing: border-box;
-                    margin: 0;
-                    padding: 0;
-                }
+    <style>
+        .container {
+            max-width: 900px;
+            /* Reduced for better readability */
+            margin: 0 auto;
+            padding: 2.5rem 1rem;
+            display: block;
+            /* Override global grid */
+        }
 
-                body {
-                    font-family: 'Segoe UI', system-ui, sans-serif;
-                    background: var(--bg);
-                    padding: 2rem;
-                    color: var(--text);
-                    line-height: 1.6;
-                }
+        .section-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-light);
+            margin-bottom: 2.5rem;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
 
-                .container {
-                    max-width: 1000px;
-                    margin: 0 auto;
-                }
+        .section-card:hover {
+            box-shadow: var(--shadow-md);
+        }
 
-                header {
-                    margin-bottom: 2rem;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 2px solid var(--border-light);
+        }
 
-                h1 {
-                    color: var(--primary);
-                    font-size: 1.8rem;
-                }
+        .section-header i {
+            font-size: 1.8rem;
+            color: var(--accent);
+        }
 
-                h2 {
-                    font-size: 1.25rem;
-                    color: var(--primary);
-                    margin-bottom: 1rem;
-                    border-bottom: 2px solid var(--border);
-                    padding-bottom: 0.5rem;
-                }
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
 
-                h3 {
-                    font-size: 1.1rem;
-                    color: var(--text);
-                    margin-top: 1.5rem;
-                    margin-bottom: 0.5rem;
-                    font-weight: 600;
-                }
+        h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1.25rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
 
-                p,
-                li {
-                    color: #374151;
-                    margin-bottom: 0.8rem;
-                }
+        p {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+        }
 
-                ul,
-                ol {
-                    padding-left: 1.5rem;
-                    margin-bottom: 1.5rem;
-                }
+        ol,
+        ul {
+            line-height: 1.8;
+            padding-left: 2rem;
+            margin: 1.5rem 0;
+            color: var(--text);
+        }
 
-                .back-link {
-                    text-decoration: none;
-                    color: var(--text-light);
-                    font-weight: 500;
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                    transition: color 0.2s;
-                }
+        li {
+            margin-bottom: 1rem;
+            font-size: 1.05rem;
+        }
 
-                .back-link:hover {
-                    color: var(--primary);
-                }
+        code {
+            background: var(--border-light);
+            color: var(--primary-dark);
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.9em;
+            font-weight: 600;
+        }
 
-                .card {
-                    background: var(--white);
-                    padding: 2rem;
-                    border-radius: 12px;
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-                    margin-bottom: 2rem;
-                }
+        .tip {
+            background: #f0f7ff;
+            border-left: 5px solid var(--accent);
+            padding: 1.5rem 2rem;
+            margin: 2rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            color: var(--primary-light);
+        }
 
-                .step-badge {
-                    display: inline-block;
-                    background: var(--primary);
-                    color: white;
-                    border-radius: 50%;
-                    width: 24px;
-                    height: 24px;
-                    text-align: center;
-                    line-height: 24px;
-                    font-size: 0.85rem;
-                    margin-right: 0.5rem;
-                }
+        .tip strong {
+            color: var(--accent-dark);
+        }
 
-                .nav-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 1rem;
-                    margin-bottom: 2rem;
-                }
+        .danger-tip {
+            background: #fff5f5;
+            border-left-color: var(--danger);
+        }
 
-                .nav-card {
-                    background: var(--white);
-                    padding: 1rem;
-                    border-radius: 8px;
-                    border: 1px solid var(--border);
-                    text-decoration: none;
-                    color: var(--text);
-                    font-weight: 500;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    transition: all 0.2s;
-                }
+        .danger-tip strong {
+            color: var(--danger);
+        }
 
-                .nav-card:hover {
-                    border-color: var(--primary);
-                    color: var(--primary);
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-                }
+        .quick-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            justify-content: center;
+        }
 
-                code {
-                    background: #f1f5f9;
-                    padding: 0.2rem 0.4rem;
-                    border-radius: 4px;
-                    font-family: monospace;
-                    color: #be185d;
-                    font-size: 0.9em;
-                }
+        .quick-nav a {
+            padding: 0.8rem 1.6rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            /* Pill style */
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+        }
 
-                .tip {
-                    background: #eff6ff;
-                    border-left: 4px solid var(--primary);
-                    padding: 1rem;
-                    border-radius: 0 4px 4px 0;
-                    margin: 1rem 0;
-                    font-size: 0.95rem;
-                }
-            </style>
-        </head>
+        .quick-nav a:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
 
-        <body>
+        @media (max-width: 768px) {
+            .section-card {
+                padding: 1.5rem;
+            }
 
-            <div class="container">
-                <header>
-                    <div>
-                        <h1>Help Guidelines</h1>
-                        <p style="color: var(--text-light);">Staff Manual for Resort Reservation System</p>
-                    </div>
-                    <a href="index.jsp" class="back-link">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="19" y1="12" x2="5" y2="12"></line>
-                            <polyline points="12 19 5 12 12 5"></polyline>
-                        </svg>
-                        Back to Dashboard
-                    </a>
-                </header>
+            .section-header h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
 
-                <!-- Quick Navigation -->
-                <div class="nav-grid">
-                    <a href="#guests" class="nav-card">
-                        Manage Guests <span>&darr;</span>
-                    </a>
-                    <a href="#reservations" class="nav-card">
-                        Reservations <span>&darr;</span>
-                    </a>
-                    <a href="#billing" class="nav-card">
-                        Billing & Taxes <span>&darr;</span>
-                    </a>
-                </div>
+<body>
 
-                <!-- 1. Guest Management -->
-                <div id="guests" class="card">
-                    <h2>1. Guest Management</h2>
-                    <p>The <strong>Guest</strong> module allows you to register frequent or new visitors before creating
-                        a reservation. This enables faster booking flows.</p>
+    <header>
+        <h1>Staff Help Section</h1>
+        <a href="index.jsp" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </header>
 
-                    <h3>How to register a new guest:</h3>
-                    <ol>
-                        <li>Navigate to the <strong>Manage Guests</strong> page from the dashboard.</li>
-                        <li>Fill in the form on the right side:
-                            <ul>
-                                <li><strong>Contact Number:</strong> Must be unique. This is used for searching.</li>
-                                <li><strong>Name:</strong> Full legal name.</li>
-                                <li><strong>Address:</strong> Permanent address (optional but recommended).</li>
-                            </ul>
-                        </li>
-                        <li>Click the <strong>Register Guest</strong> button.</li>
-                    </ol>
+    <div class="container">
 
-                    <div class="tip">
-                        <strong>Tip:</strong> You can edit a guest's details by searching for their contact number and
-                        clicking the "Edit" button next to their name in the list.
-                    </div>
-                </div>
+        <!-- Quick Navigation -->
+        <div class="quick-nav">
+            <a href="#guests"><i class="fas fa-users"></i> Guest Management</a>
+            <a href="#reservations"><i class="fas fa-calendar-alt"></i> Reservations</a>
+            <a href="#billing"><i class="fas fa-file-invoice"></i> Billing & Checkout</a>
+            <a href="#support"><i class="fas fa-tools"></i> Technical Support</a>
+        </div>
 
-                <!-- 2. Reservation System -->
-                <div id="reservations" class="card">
-                    <h2>2. Making Reservations</h2>
-                    <p>The <strong>Reservation</strong> module is the core of the system. It handles room availability
-                        and booking dates.</p>
-
-                    <h3>Workflow for a new booking:</h3>
-                    <ol>
-                        <li>Go to <strong>Reservations</strong>.</li>
-                        <li><strong>Enter Guest Details:</strong> If the guest is already registered, searching their
-                            number might help (future feature). For now, enter their Name and Contact.</li>
-                        <li><strong>Select Room:</strong>
-                            <ul>
-                                <li>The dropdown only shows rooms that are <em>Active</em>.</li>
-                                <li>Rooms already booked for specific dates might still appear in the list globally, but
-                                    the system validates dates upon submission (logic dependent).</li>
-                                <li>Look for the price per night displayed in the dropdown (e.g.,
-                                    <code>Room 101 - Deluxe ($150.0)</code>).
-                                </li>
-                            </ul>
-                        </li>
-                        <li><strong>Choose Dates:</strong> Select Check-in and Check-out dates.</li>
-                        <li>Click <strong>Confirm Booking</strong>.</li>
-                    </ol>
-
-                    <h3>Modifying a stay:</h3>
-                    <p>Click "Edit" on any reservation in the table. You can change dates or move the guest to a
-                        different room. The system will automatically update the total cost calculation when you
-                        generate the bill.</p>
-                </div>
-
-                <!-- 3. Billing -->
-                <div id="billing" class="card">
-                    <h2>3. Billing & Invoices</h2>
-                    <p>Finalize a guest's stay by generating an official invoice.</p>
-
-                    <h3>Generating a Bill:</h3>
-                    <ol>
-                        <li>In the <strong>Reservations</strong> table, find the specific reservation.</li>
-                        <li>Click the purple <strong>Bill</strong> button in the Actions column.</li>
-                        <li>The system will calculate:
-                            <ul>
-                                <li><strong>Room Charges:</strong> Rate &times; Number of Nights.</li>
-                                <li><strong>Tax:</strong> A fixed 10% service tax.</li>
-                            </ul>
-                        </li>
-                        <li>You will be redirected to the <strong>Invoice View</strong>.</li>
-                    </ol>
-
-                    <h3>Printing:</h3>
-                    <p>On the Invoice page, click the blue <strong>Print Invoice</strong> button. This opens the
-                        browser's print dialog. The sidebar and buttons will be hidden automatically on the printed
-                        paper.</p>
-                </div>
-
-                <!-- Support -->
-                <div class="card" style="border-left: 4px solid var(--primary-dark);">
-                    <h2>Need Technical Support?</h2>
-                    <p>If you encounter database errors, "404 Not Found" issues, or incorrect calculations, please
-                        contact the IT Administrator immediately.</p>
-                    <p><strong>Admin Contact:</strong> admin@oceanview.com | Ext: 9999</p>
-                </div>
-
+        <!-- Guest Management -->
+        <div id="guests" class="section-card">
+            <div class="section-header">
+                <i class="fas fa-user-plus"></i>
+                <h2>1. Managing Guests</h2>
             </div>
+            <p>Efficient guest management is the foundation of our resort's service. Every visitor must be
+                registered in the system prior to booking.</p>
 
-        </body>
+            <h3>How to Register a New Guest</h3>
+            <ol>
+                <li>Navigate to the <strong>Manage Guests</strong> page.</li>
+                <li>Complete the registration form on the right side:
+                    <ul>
+                        <li><strong>Full Name</strong>: Use official identification names.</li>
+                        <li><strong>Contact Number</strong>: This is the primary unique identifier.</li>
+                        <li><strong>Email & Address</strong>: Recommended for loyalty and billing.</li>
+                    </ul>
+                </li>
+                <li>Click <code>Register Guest</code> to save.</li>
+            </ol>
 
-        </html>
+            <div class="tip">
+                <strong>Pro Tip:</strong> Use the search bar in the Guest Management table to quickly find
+                existing guests by their contact number to avoid duplicate entries.
+            </div>
+        </div>
+
+        <!-- Reservations -->
+        <div id="reservations" class="section-card">
+            <div class="section-header">
+                <i class="fas fa-calendar-check"></i>
+                <h2>2. Handling Reservations</h2>
+            </div>
+            <p>The reservation system links guests with available rooms. Accuracy in dates ensures optimal
+                occupancy and prevents double bookings.</p>
+
+            <h3>Creating a New Booking</h3>
+            <ol>
+                <li>Go to the <strong>Reservations</strong> dashboard.</li>
+                <li><strong>Identify Guest</strong>: Enter their contact number. If they are registered,
+                    their details will auto-populate.</li>
+                <li><strong>Check Availability</strong>: Click the <code>Check Availability</code> button in
+                    the header to use the advanced room finder.</li>
+                <li><strong>Select Dates</strong>: Specify check-in and check-out dates carefully.</li>
+                <li>Click <code>Confirm Booking</code> to finalize.</li>
+            </ol>
+
+            <div class="tip">
+                <strong>System Logic:</strong> The system automatically filters out rooms that are already
+                "Booked" for the selected criteria, but always double-check dates before confirming.
+            </div>
+        </div>
+
+        <!-- Billing & Status -->
+        <div id="billing" class="section-card">
+            <div class="section-header">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <h2>3. Billing & Status Workflow</h2>
+            </div>
+            <p>Tracking the financial status of each stay is critical for revenue management.</p>
+
+            <h3>Reservation Statuses</h3>
+            <ul>
+                <li><span style="color:var(--warning); font-weight:700;">PENDING</span>: Guest has booked
+                    but payment is not processed.</li>
+                <li><span style="color:var(--success); font-weight:700;">PAID</span>: Bill has been
+                    generated and payment confirmed.</li>
+                <li><span style="color:var(--danger); font-weight:700;">CANCELLED</span>: The reservation
+                    has been voided.</li>
+            </ul>
+
+            <h3>Checkout Process</h3>
+            <ol>
+                <li>Locate the reservation in the list.</li>
+                <li>Click the <code>Bill</code> button in the actions column.</li>
+                <li>Review the bill details (Room charges + 10% statutory tax).</li>
+                <li>Click <code>Print Invoice</code> to provide a physical copy to the guest.</li>
+            </ol>
+        </div>
+
+        <!-- Technical Support -->
+        <div id="support" class="section-card">
+            <div class="section-header">
+                <i class="fas fa-headset"></i>
+                <h2>4. Technical Support</h2>
+            </div>
+            <p>If you encounter database errors, system lag, or login issues, please contact the IT team
+                immediately.</p>
+
+            <div class="tip danger-tip">
+                <strong>IT Support Contacts:</strong><br>
+                <i class="fas fa-phone"></i> Extension: <strong>501</strong> (Internal Only)<br>
+                <i class="fas fa-envelope"></i> Email: <code>support.tech@oceanview.resort</code>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

@@ -1,7 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="com.dinod.ocean_view_resort.model.Room" %>
-
 <%
 // Security: Prevent back button access
 response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -18,8 +17,6 @@ return; // Stop executing the rest of the page
 }
 %>
 
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -27,123 +24,10 @@ return; // Stop executing the rest of the page
     <meta charset="UTF-8">
     <title>Manage Rooms | Ocean View Resort</title>
 
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #006994;
-            --primary-dark: #005a80;
-            --text: #1f2937;
-            --bg: #f3f4f6;
-            --white: #ffffff;
-            --danger: #dc2626;
-            --success: #16a34a;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: var(--bg);
-            padding: 2rem;
-            color: var(--text);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            gap: 2rem;
-            grid-template-columns: 2fr 1fr;
-        }
-
-        .card {
-            background: var(--white);
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        h1 {
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-        }
-
-        h2 {
-            color: var(--primary);
-            margin-bottom: 1.5rem;
-            border-bottom: 2px solid #e5e7eb;
-            padding-bottom: 0.5rem;
-        }
-
-        header {
-            margin-bottom: 2rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.4rem;
-            font-weight: 600;
-            color: #4b5563;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            font-size: 0.95rem;
-        }
-
-        input:focus,
-        select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0, 105, 148, 0.1);
-        }
-
-        button {
-            width: 100%;
-            padding: 0.75rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        #submitBtn {
-            background: var(--primary);
-            color: white;
-            margin-top: 0.5rem;
-        }
-
-        #submitBtn:hover {
-            background: var(--primary-dark);
-        }
-
-        #cancelBtn {
-            background: transparent;
-            color: #6b7280;
-            border: 1px solid #d1d5db;
-            margin-top: 0.5rem;
-        }
-
-        #cancelBtn:hover {
-            background: #f3f4f6;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-
-        /* Fix checkbox alignment */
+        /* Page-specific overrides or additions */
         .checkbox-container {
             display: flex;
             align-items: center;
@@ -152,41 +36,9 @@ return; // Stop executing the rest of the page
             cursor: pointer;
         }
 
-        /* Remove default block display from checkbox input so it fits in flex */
         .checkbox-container input {
             width: auto;
             margin-bottom: 0;
-        }
-
-        /* Ensure table text is visible */
-        th,
-        td {
-            padding: 1rem;
-            border-bottom: 1px solid #e5e7eb;
-            text-align: left;
-            color: #374151;
-            /* Dark gray for visibility */
-        }
-
-        th {
-            background: #f9fafb;
-            font-weight: 600;
-            color: #111827;
-            /* Darker for headers */
-        }
-
-        /* ... existing styles ... */
-        tr:hover {
-            background: #f9fafb;
-        }
-
-        .badge-available,
-        .badge-booked {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.85rem;
-            font-weight: 600;
         }
 
         .badge-available {
@@ -199,95 +51,23 @@ return; // Stop executing the rest of the page
             color: #991b1b;
         }
 
-        .btn-edit,
-        .btn-delete {
-            width: auto;
-            padding: 0.4rem 0.8rem;
-            font-size: 0.85rem;
-            margin-right: 0.25rem;
-        }
-
-        .btn-edit {
-            background: #eff6ff;
-            color: var(--primary);
-            border: 1px solid #bfdbfe;
-        }
-
-        .btn-edit:hover {
-            background: #dbeafe;
-        }
-
-        .btn-delete {
-            background: #fef2f2;
-            color: var(--danger);
-            border: 1px solid #fecaca;
-        }
-
-        .btn-delete:hover {
-            background: #fee2e2;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .search-row {
+        /* Page-specific overrides for the multi-column search grid */
+        .search-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 0.8fr 0.8fr auto auto;
             gap: 0.75rem;
-            margin-bottom: 1.5rem;
-            align-items: end;
+            margin-bottom: 2rem;
+            align-items: flex-end;
         }
 
-        .search-row label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: #6b7280;
-            margin-bottom: 0.25rem;
-        }
-
-        .search-row input,
-        .search-row select {
+        .search-grid .form-group {
             margin-bottom: 0;
-            padding: 0.6rem;
         }
 
         @media(max-width: 900px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-
-            .search-row {
+            .search-grid {
                 grid-template-columns: 1fr 1fr;
             }
-
-            .btn-search,
-            .btn-reset {
-                grid-column: span 1;
-            }
-        }
-
-        .btn-search {
-            background: var(--primary);
-            color: white;
-            width: auto;
-            padding: 0.6rem 1.5rem;
-        }
-
-        .btn-search:hover {
-            background: var(--primary-dark);
-        }
-
-        .btn-reset {
-            background: transparent;
-            color: #6b7280;
-            border: 1px solid #d1d5db;
-            width: auto;
-            padding: 0.6rem 1.5rem;
-        }
-
-        .btn-reset:hover {
-            background: #f3f4f6;
         }
     </style>
 </head>
@@ -296,7 +76,9 @@ return; // Stop executing the rest of the page
 
     <header>
         <h1>Room Management</h1>
-        <p>Add, edit and manage resort rooms</p>
+        <a href="./index.jsp" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
     </header>
 
     <div class="container">
@@ -308,39 +90,46 @@ return; // Stop executing the rest of the page
                 <h2>All Rooms</h2>
             </div>
 
-            <div class="search-row">
-                <div>
+            <div class="search-grid">
+                <div class="form-group">
                     <label>Room No</label>
-                    <input type="text" id="searchRoomNo" placeholder="No...">
+                    <input type="text" id="searchRoomNo" placeholder="e.g. 101"
+                        onkeyup="if(event.key==='Enter') applyFilters()">
                 </div>
-                <div>
+                <div class="form-group">
                     <label>Type</label>
                     <select id="searchType">
-                        <option value="All">All Types</option>
+                        <option value="">All Types</option>
                         <option value="Single">Single</option>
                         <option value="Double">Double</option>
-                        <option value="Suite">Suite</option>
                         <option value="Deluxe">Deluxe</option>
+                        <option value="Suite">Suite</option>
                     </select>
                 </div>
-                <div>
+                <div class="form-group">
                     <label>Status</label>
                     <select id="searchStatus">
-                        <option value="All">All Status</option>
+                        <option value="">All Status</option>
                         <option value="Available">Available</option>
                         <option value="Booked">Booked</option>
                     </select>
                 </div>
-                <div>
+                <div class="form-group">
                     <label>Min Price</label>
-                    <input type="number" id="searchMinPrice" placeholder="Min">
+                    <input type="number" id="searchMinPrice" placeholder="Min"
+                        onkeyup="if(event.key==='Enter') applyFilters()">
                 </div>
-                <div>
+                <div class="form-group">
                     <label>Max Price</label>
-                    <input type="number" id="searchMaxPrice" placeholder="Max">
+                    <input type="number" id="searchMaxPrice" placeholder="Max"
+                        onkeyup="if(event.key==='Enter') applyFilters()">
                 </div>
-                <button class="btn-search" onclick="applyFilters()">Search</button>
-                <button class="btn-reset" onclick="resetFilters()">Reset</button>
+                <button onclick="applyFilters()" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button onclick="resetFilters()" class="btn btn-outline">
+                    <i class="fas fa-sync"></i>
+                </button>
             </div>
 
             <table>
@@ -390,9 +179,12 @@ return; // Stop executing the rest of the page
 
                 <div id="form-msg" class="hidden"></div>
 
-                <button type="submit" id="submitBtn">Create Room</button>
-                <button type="button" id="cancelBtn" class="hidden"
-                    onclick="resetForm()">Cancel</button>
+                <button type="submit" id="submitBtn" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Room
+                </button>
+                <button type="button" id="cancelBtn" class="btn btn-outline hidden" onclick="resetForm()">
+                    Cancel
+                </button>
             </form>
         </div>
 
@@ -442,19 +234,19 @@ return; // Stop executing the rest of the page
                         const badgeText = isAvail ? 'Available' : 'Booked';
 
                         tr.innerHTML = `
-                        <td style="font-weight:600">#\${id}</td>
-                        <td>\${type}</td>
-                        <td>$\${price}</td>
-                        <td><span class="\${badgeClass}">\${badgeText}</span></td>
-                        <td></td>
-                    `;
+<td style="font-weight:600">#\${id}</td>
+<td>\${type}</td>
+<td>$\${price}</td>
+<td><span class="\${badgeClass}">\${badgeText}</span></td>
+<td></td>
+`;
 
                         // Action Cell
                         const actionTd = tr.lastElementChild;
 
                         // Edit Button
                         const editBtn = document.createElement('button');
-                        editBtn.className = 'btn-edit';
+                        editBtn.className = 'action-btn btn-edit';
                         editBtn.textContent = 'Edit';
                         editBtn.dataset.room = JSON.stringify(r);
                         editBtn.onclick = function () {
@@ -466,12 +258,16 @@ return; // Stop executing the rest of the page
 
                         // Delete Button
                         const deleteBtn = document.createElement('button');
-                        deleteBtn.className = 'btn-delete';
+                        deleteBtn.className = 'action-btn btn-delete';
                         deleteBtn.textContent = 'Delete';
                         deleteBtn.onclick = function () { deleteRoom(id); };
 
-                        actionTd.appendChild(editBtn);
-                        actionTd.appendChild(deleteBtn);
+                        const flexDiv = document.createElement('div');
+                        flexDiv.style.display = 'flex';
+                        flexDiv.style.gap = '0.25rem';
+                        flexDiv.appendChild(editBtn);
+                        flexDiv.appendChild(deleteBtn);
+                        actionTd.appendChild(flexDiv);
 
                         tbody.appendChild(tr);
                     });
