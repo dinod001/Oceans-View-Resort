@@ -5,15 +5,17 @@ response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 response.setHeader("Pragma", "no-cache");
 response.setDateHeader("Expires", 0);
 
-// Session Check - Admin Only
+// Session check – Admin only
 String username = (String) session.getAttribute("username");
 String role = (String) session.getAttribute("role");
 
 if (username == null || !"Admin".equalsIgnoreCase(role)) {
+// Redirect unauthorized users to login page
 response.sendRedirect("../login.jsp");
 return; // Stop executing the rest of the page
 }
 %>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -213,6 +215,44 @@ return; // Stop executing the rest of the page
             100% {
                 transform: scale(0.95);
                 box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
+        }
+
+        /* Mobile Breakpoints */
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem auto;
+                padding: 0 1rem;
+            }
+
+            .welcome-section h2 {
+                font-size: 1.75rem;
+            }
+
+            .welcome-section p {
+                font-size: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .stat-card {
+                padding: 1.5rem;
+            }
+
+            .nav-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .nav-card-body {
+                padding: 1.5rem;
+            }
+
+            .nav-card-footer {
+                padding: 1rem 1.5rem;
             }
         }
     </style>

@@ -5,7 +5,7 @@ response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 response.setHeader("Pragma", "no-cache");
 response.setDateHeader("Expires", 0);
 
-// Session Check - Staff Only
+// Session check – Staff only
 String username = (String) session.getAttribute("username");
 String role = (String) session.getAttribute("role");
 
@@ -15,6 +15,7 @@ response.sendRedirect("../login.jsp");
 return; // Stop executing the rest of the page
 }
 %>
+
 
 
 <!DOCTYPE html>
@@ -29,8 +30,32 @@ return; // Stop executing the rest of the page
     <style>
         /* Page-specific overrides */
         .container {
-            grid-template-columns: 1.1fr 1fr;
+            grid-template-columns: 1.5fr 1fr;
             gap: 2.5rem;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr !important;
+                /* Force stack on mobile */
+            }
+
+            .header-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn-check-avail-header,
+            .back-link {
+                width: 100%;
+                justify-content: center;
+            }
         }
 
         .search-bar {
@@ -245,7 +270,7 @@ return; // Stop executing the rest of the page
 
     <header>
         <h1>Reservations</h1>
-        <div style="display:flex; gap:1rem; align-items:center;">
+        <div class="header-controls">
             <button type="button" class="btn-check-avail-header" onclick="openRoomPicker()">
                 <i class="fas fa-search"></i> Check Availability
             </button>

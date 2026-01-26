@@ -1,11 +1,12 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+
 <%
 // Security: Prevent back button access
 response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 response.setHeader("Pragma", "no-cache");
 response.setDateHeader("Expires", 0);
 
-// Session Check - Staff Only
+// Session check – Staff only
 String username = (String) session.getAttribute("username");
 String role = (String) session.getAttribute("role");
 
@@ -15,6 +16,8 @@ response.sendRedirect("../login.jsp");
 return; // Stop executing the rest of the page
 }
 %>
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -182,6 +185,44 @@ return; // Stop executing the rest of the page
         .nav-card:hover .nav-card-footer {
             background: #eff6ff;
         }
+
+        /* Mobile Breakpoints */
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem auto;
+                padding: 0 1rem;
+            }
+
+            .welcome-section h2 {
+                font-size: 1.75rem;
+            }
+
+            .welcome-section p {
+                font-size: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .stat-card {
+                padding: 1.5rem;
+            }
+
+            .nav-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .nav-card-body {
+                padding: 1.5rem;
+            }
+
+            .nav-card-footer {
+                padding: 1rem 1.5rem;
+            }
+        }
     </style>
 </head>
 
@@ -189,7 +230,7 @@ return; // Stop executing the rest of the page
 
     <header>
         <h1>Ocean View Resort | Staff Portal</h1>
-        <div style="display:flex; gap:1rem; align-items:center;">
+        <div class="header-controls">
             <span style="font-size:0.9rem; color:#94a3b8;">Welcome, <strong>
                     <%= username %>
                 </strong></span>

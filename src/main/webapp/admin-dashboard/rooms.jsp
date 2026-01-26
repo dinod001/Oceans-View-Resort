@@ -7,66 +7,247 @@ response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 response.setHeader("Pragma", "no-cache");
 response.setDateHeader("Expires", 0);
 
-// Session Check - Admin Only
+// Session check – Admin only
 String username = (String) session.getAttribute("username");
 String role = (String) session.getAttribute("role");
 
 if (username == null || !"Admin".equalsIgnoreCase(role)) {
+// Redirect unauthorized users to login page
 response.sendRedirect("../login.jsp");
 return; // Stop executing the rest of the page
 }
 %>
+
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Rooms | Ocean View Resort</title>
 
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Page-specific overrides or additions */
+        /* Page-specific overrides for Standard Dashboard Look */
+        .container {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 2.5rem;
+            padding-top: 1rem;
+        }
+
+        .card {
+            padding: 1.5rem !important;
+            /* Standard padding */
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+        }
+
         .checkbox-container {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
             cursor: pointer;
         }
 
         .checkbox-container input {
-            width: auto;
-            margin-bottom: 0;
+            width: 1rem !important;
+            height: 1rem !important;
+            margin-bottom: 0 !important;
         }
 
         .badge-available {
             background: #dcfce7;
             color: #166534;
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.8rem;
+            font-weight: 700;
         }
 
         .badge-booked {
             background: #fee2e2;
             color: #991b1b;
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.8rem;
+            font-weight: 700;
         }
 
-        /* Page-specific overrides for the multi-column search grid */
-        .search-grid {
+        /* Professional Left-Aligned Header (Matches Reservations) */
+        header {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            gap: 1.5rem !important;
+            padding: 1.5rem 2rem !important;
+            background: #0f172a !important;
+            box-shadow: var(--shadow-md);
+        }
+
+        header h1 {
+            margin: 0 !important;
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+            letter-spacing: -0.025em !important;
+            color: white;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.9);
+            padding: 0.65rem 1.25rem;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* Professional Filter Bar - Perfect 3-Column Grid */
+        .search-bar {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 0.8fr 0.8fr auto auto;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+            background: #f8fafc;
+            padding: 1.75rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            align-items: end;
+            /* This makes buttons line up with inputs accurately */
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .filter-group label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-light);
+            letter-spacing: 0.05em;
+            margin-bottom: 2px;
+        }
+
+        .search-bar input,
+        .search-bar select {
+            width: 100%;
+            height: 42px;
+            padding: 0 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+
+        .filter-actions {
+            display: flex;
             gap: 0.75rem;
-            margin-bottom: 2rem;
-            align-items: flex-end;
+            justify-content: flex-end;
+            /* Align buttons to the right of the slot */
         }
 
-        .search-grid .form-group {
-            margin-bottom: 0;
+        .search-bar .btn {
+            width: 44px;
+            /* Force square for alignment */
+            height: 42px;
+            padding: 0;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
         }
 
-        @media(max-width: 900px) {
-            .search-grid {
+        /* Standard Table Spacing */
+        table th,
+        table td {
+            padding: 0.85rem 1rem !important;
+            font-size: 0.9rem;
+        }
+
+        /* Tablet/Mobile Breakpoints */
+        @media (max-width: 1100px) {
+            .container {
+                grid-template-columns: 1fr !important;
+                gap: 2.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+
+            /* Mobile Header - Centered & Stacked (Matches Reservations) */
+            header {
+                flex-direction: column !important;
+                text-align: center !important;
+                padding: 2rem 1.5rem !important;
+            }
+
+            header h1 {
+                font-size: 1.75rem !important;
+            }
+
+            .header-controls {
+                flex-direction: column;
+                width: 100%;
+                gap: 0.75rem;
+            }
+
+            .back-link {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Filter Bar - 2 columns on tablets */
+            .search-bar {
                 grid-template-columns: 1fr 1fr;
+                gap: 1.25rem;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .search-bar {
+                grid-template-columns: 1fr;
+                /* 1 column on mobile */
+                gap: 1rem;
+            }
+
+            .filter-actions {
+                justify-content: stretch;
+                /* Full width buttons on mobile */
+            }
+
+            .search-bar .btn {
+                flex: 1;
+                /* Buttons take equal space */
             }
         }
     </style>
@@ -76,27 +257,29 @@ return; // Stop executing the rest of the page
 
     <header>
         <h1>Room Management</h1>
-        <a href="./index.jsp" class="back-link">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
+        <div class="header-controls">
+            <a href="./index.jsp" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
     </header>
 
     <div class="container">
 
         <!-- ROOM LIST -->
-        <div class="card">
+        <div class="card table-responsive">
             <div
                 style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h2>All Rooms</h2>
             </div>
 
-            <div class="search-grid">
-                <div class="form-group">
+            <!-- Search Bar (Grouped Filter Row) -->
+            <div class="search-bar">
+                <div class="filter-group">
                     <label>Room No</label>
-                    <input type="text" id="searchRoomNo" placeholder="e.g. 101"
-                        onkeyup="if(event.key==='Enter') applyFilters()">
+                    <input type="text" id="searchRoomNo" placeholder="Search...">
                 </div>
-                <div class="form-group">
+                <div class="filter-group">
                     <label>Type</label>
                     <select id="searchType">
                         <option value="">All Types</option>
@@ -106,7 +289,7 @@ return; // Stop executing the rest of the page
                         <option value="Suite">Suite</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="filter-group">
                     <label>Status</label>
                     <select id="searchStatus">
                         <option value="">All Status</option>
@@ -114,22 +297,22 @@ return; // Stop executing the rest of the page
                         <option value="Booked">Booked</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="filter-group">
                     <label>Min Price</label>
-                    <input type="number" id="searchMinPrice" placeholder="Min"
-                        onkeyup="if(event.key==='Enter') applyFilters()">
+                    <input type="number" id="searchMinPrice" placeholder="Min">
                 </div>
-                <div class="form-group">
+                <div class="filter-group">
                     <label>Max Price</label>
-                    <input type="number" id="searchMaxPrice" placeholder="Max"
-                        onkeyup="if(event.key==='Enter') applyFilters()">
+                    <input type="number" id="searchMaxPrice" placeholder="Max">
                 </div>
-                <button onclick="applyFilters()" class="btn btn-primary">
-                    <i class="fas fa-search"></i>
-                </button>
-                <button onclick="resetFilters()" class="btn btn-outline">
-                    <i class="fas fa-sync"></i>
-                </button>
+                <div class="filter-actions">
+                    <button onclick="applyFilters()" class="btn btn-primary" title="Apply Filters">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button onclick="resetFilters()" class="btn btn-outline" title="Reset Filters">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                </div>
             </div>
 
             <table>
@@ -151,7 +334,7 @@ return; // Stop executing the rest of the page
         </div>
 
         <!-- FORM -->
-        <div class="card">
+        <div class="card" style="align-self:start; position:sticky; top:2rem;">
             <h2 id="formTitle">Add New Room</h2>
 
             <form id="roomForm" onsubmit="handleRoomSubmit(event)">
@@ -182,7 +365,8 @@ return; // Stop executing the rest of the page
                 <button type="submit" id="submitBtn" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Add Room
                 </button>
-                <button type="button" id="cancelBtn" class="btn btn-outline hidden" onclick="resetForm()">
+                <button type="button" id="cancelBtn" class="btn btn-outline hidden"
+                    onclick="resetForm()">
                     Cancel
                 </button>
             </form>

@@ -14,6 +14,8 @@
     --card-bg: #ffffff;
     --text: #1e293b;
     --text-light: #64748b;
+    --text-muted: #94a3b8;
+    /* Added missing muted text color */
     --border: #e2e8f0;
     --border-light: #f1f5f9;
     --text-dark: #0f172a;
@@ -26,6 +28,8 @@
     --radius-sm: 6px;
     --radius-md: 8px;
     --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-2xl: 24px;
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
@@ -65,6 +69,42 @@ body {
     }
 }
 
+/* Mobile Responsiveness Improvements */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .form-row,
+    .search-row,
+    .stats-grid,
+    .nav-grid {
+        grid-template-columns: 1fr !important;
+        display: grid !important;
+    }
+
+    .search-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .card {
+        padding: 1rem;
+    }
+
+    .container {
+        padding: 0 1rem;
+    }
+
+    .header-controls {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.5rem;
+    }
+}
+
 header {
     background: var(--primary);
     color: white;
@@ -73,6 +113,12 @@ header {
     justify-content: space-between;
     align-items: center;
     box-shadow: var(--shadow-md);
+}
+
+.header-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
 }
 
 header h1 {
@@ -254,10 +300,15 @@ select:focus {
 }
 
 /* 6. Tables */
-.table-container {
+.table-container,
+.table-responsive {
     overflow-x: auto;
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
+    width: 100%;
+    display: block;
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scroll on iOS */
 }
 
 table {

@@ -7,16 +7,20 @@ response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 response.setHeader("Pragma", "no-cache");
 response.setDateHeader("Expires", 0);
 
-// Session Check - Admin Only
+// Session check – Admin only
 String username = (String) session.getAttribute("username");
 String role = (String) session.getAttribute("role");
 
 if (username == null || !"Admin".equalsIgnoreCase(role)) {
+// Redirect unauthorized users to login page
 response.sendRedirect("../login.jsp");
 return; // Stop executing the rest of the page
 }
 %>
 
+
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -27,6 +31,47 @@ return; // Stop executing the rest of the page
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Professional Left-Aligned Header (Matches Reservations & Rooms) */
+        header {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            gap: 1.5rem !important;
+            padding: 1.5rem 2rem !important;
+            background: #0f172a !important;
+            box-shadow: var(--shadow-md);
+        }
+
+        header h1 {
+            margin: 0 !important;
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+            letter-spacing: -0.025em !important;
+            color: white;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.9);
+            padding: 0.65rem 1.25rem;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+            color: white;
+            transform: translateY(-1px);
+        }
+
         /* Page-specific overrides or additions */
         .password-container {
             position: relative;
@@ -61,6 +106,56 @@ return; // Stop executing the rest of the page
 
         .search-row select {
             max-width: 140px;
+        }
+
+        /* Responsive Container Layout */
+        .container {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Mobile Breakpoints */
+        @media (max-width: 1100px) {
+
+            /* Stack cards vertically on tablets */
+            .container {
+                grid-template-columns: 1fr !important;
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+
+            /* Mobile Header - Centered & Stacked */
+            header {
+                flex-direction: column !important;
+                text-align: center !important;
+                padding: 2rem 1.5rem !important;
+            }
+
+            header h1 {
+                font-size: 1.75rem !important;
+            }
+
+            .back-link {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Mobile Container - Reduce padding */
+            .container {
+                padding: 1rem;
+                gap: 1.5rem;
+            }
+
+            /* Mobile Table - Horizontal scroll */
+            .card {
+                overflow-x: auto;
+            }
         }
     </style>
 </head>
