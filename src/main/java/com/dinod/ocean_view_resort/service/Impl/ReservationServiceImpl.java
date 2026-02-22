@@ -65,9 +65,11 @@ public class ReservationServiceImpl implements ReservationService {
 
         Guest existingGuest = guestService.getGuestByContactNo(contact);
         if (existingGuest != null) {
-            // Guest exists: Use their ID. Do NOT overwrite their details (as per
-            // requirement).
+            // Guest exists: use their ID and update their details (name, email, address)
+            // so the confirmation email goes to the address the staff entered right now.
             reservation.setGuestID(existingGuest.getGuestID());
+            guestDetails.setGuestID(existingGuest.getGuestID());
+            guestService.updateGuest(guestDetails);
         } else {
             // Guest does not exist: Create new guest
             boolean guestAdded = guestService.addGuest(guestDetails);
