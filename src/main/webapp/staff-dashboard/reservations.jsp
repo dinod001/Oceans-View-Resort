@@ -427,7 +427,7 @@ return; // Stop executing the rest of the page
 
                         const option = document.createElement('option');
                         option.value = rNo;
-                        option.textContent = 'Room ' + rNo + ' - ' + rType + ' ($' + parseFloat(rPrice).toFixed(2) + ') ' + (isAvail ? '' : '(Booked)');
+                        option.textContent = 'Room ' + rNo + ' - ' + rType + ' (Rs.' + parseFloat(rPrice).toFixed(2) + ') ' + (isAvail ? '' : '(Booked)');
 
                         if (!isAvail) {
                             option.style.color = '#ccc';
@@ -492,7 +492,7 @@ return; // Stop executing the rest of the page
                             '<strong style="color:var(--primary);">Room ' + r.roomNo + '</strong><br>' +
                             '<span style="font-size:0.85em; color:#6b7280;">' + (r.roomType || '') + '</span>' +
                             '</td>' +
-                            '<td>$' + parseFloat(r.pricePerNight).toFixed(2) + '</td>' +
+                            '<td>Rs.' + parseFloat(r.pricePerNight).toFixed(2) + '</td>' +
                             '<td style="white-space:nowrap;">' +
                             '<div style="color:#059669;">In: ' + checkIn + '</div>' +
                             '<div style="color:#dc2626;">Out: ' + checkOut + '</div>' +
@@ -702,7 +702,7 @@ return; // Stop executing the rest of the page
                         tr.innerHTML =
                             '<td><strong>#' + id + '</strong></td>' +
                             '<td>' + r.roomType + '</td>' +
-                            '<td>$' + parseFloat(r.pricePerNight).toFixed(2) + '</td>' +
+                            '<td>Rs.' + parseFloat(r.pricePerNight).toFixed(2) + '</td>' +
                             '<td><span class="' + badgeClass + '">' + badgeText + '</span></td>' +
                             '<td><button class="btn-select-room" onclick="selectRoomFromPicker(' + id + ')">Select</button></td>';
                         tbody.appendChild(tr);
